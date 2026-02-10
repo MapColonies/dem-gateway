@@ -222,9 +222,9 @@ paths:
       operationId: validate
       tags:
         - validate
-      summary: Checks validation for metadata and/or all provided files
+      summary: Checks validation for provided DEM file
       requestBody:
-        description: An object containing object of metadata and/or object of dem input files
+        description: An object containing object of DEM input file
         required: true
         content:
           application/json:
@@ -463,21 +463,11 @@ components:
     ValidateRequestBody:
       type: object
       unevaluatedProperties: false
-      anyOf:
-        - type: object
-          required:
-            - metadata
-          properties:
-            metadata:
-              allOf:
-                - $ref: '#/components/schemas/DemMetadata'
-        - type: object
-          required:
-            - inputFiles
-          properties:
-            inputFiles:
-              allOf:
-                - $ref: '#/components/schemas/InputFiles'
+      required:
+        - demFilePath
+      properties:
+        demFilePath:
+          $ref: '#/components/schemas/DemFilePath'
     ValidateSuccessfulResponse:
       allOf:
         - $ref: '#/components/schemas/ValidateBaseResponse'
