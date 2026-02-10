@@ -303,6 +303,7 @@ components:
           $ref: '#/components/schemas/ProductSubType'
     DemSuccessfulResponse:
       type: object
+      unevaluatedProperties: false
       required:
         - jobId
       properties:
@@ -315,12 +316,13 @@ components:
       minLength: 1
     ErrorMessage:
       type: object
+      unevaluatedProperties: false
+      required:
+        - message
       properties:
         message:
           type: string
           minLength: 1
-      required:
-        - message
     GeoidModel:
       type: string
       description: Earth's geoid model
@@ -430,6 +432,7 @@ components:
       required:
         - isValid
     ValidateFailedResponse:
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/ValidateBaseResponse'
         - type: object
@@ -465,6 +468,7 @@ components:
         demFilePath:
           $ref: '#/components/schemas/DemFilePath'
     ValidateSuccessfulResponse:
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/ValidateBaseResponse'
         - type: object
