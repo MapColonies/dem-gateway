@@ -161,6 +161,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+  /dem/{id}/status:
+    patch:
+      operationId: modifyStatus
+      tags:
+        - dem
+      summary: Modify status for existing DEM resource
+      parameters:
+        - name: id
+          in: path
+          description: The id of the DEM whose status to modify
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModifyStatusRequestBody'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemSuccessfulResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
   /validate:
     post:
       operationId: validate
@@ -304,6 +360,14 @@ components:
       properties:
         classification:
           $ref: '#/components/schemas/Classification'
+    Status:
+      type: string
+      default: UNPUBLISHED
+      enum:
+        - PUBLISHED
+        - UNPUBLISHED
+        - BEING_DELETED
+      description: The status of the DEM
     ModifyRequestBody:
       type: object
       unevaluatedProperties: false
@@ -312,6 +376,14 @@ components:
       properties:
         metadata:
           $ref: '#/components/schemas/ModifyDemMetadata'
+    ModifyStatusRequestBody:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
     ProducerName:
       type: string
       default: IDFMU
