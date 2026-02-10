@@ -112,61 +112,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
-    put:
-      operationId: update
-      tags:
-        - dem
-      summary: Update an existing DEM resource
-      parameters:
-        - name: id
-          in: path
-          description: The id of the DEM to update
-          required: true
-          schema:
-            $ref: '#/components/schemas/LayerId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateRequestBody'
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DemSuccessfulResponse'
-        400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        404:
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        409:
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        422:
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        500:
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
     delete:
       operationId: delete
       tags:
@@ -403,17 +348,6 @@ components:
         minLength: 1
       minItems: 1
       description: List of layer's regions
-    UpdateRequestBody:
-      type: object
-      unevaluatedProperties: false
-      required:
-        - metadata
-        - inputFiles
-      properties:
-        metadata:
-          $ref: '#/components/schemas/DemMetadata'
-        inputFiles:
-          $ref: '#/components/schemas/InputFiles'
     ValidateBaseResponse:
       type: object
       properties:
