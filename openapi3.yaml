@@ -352,14 +352,6 @@ components:
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/ShapeMetadata\.shp$
       description: Metadata shape file path
       example: path/to/ShapeMetadata.shp
-    EditDemMetadata:
-      type: object
-      unevaluatedProperties: false
-      required:
-        - classification
-      properties:
-        classification:
-          $ref: '#/components/schemas/Classification'
     Status:
       type: string
       default: UNPUBLISHED
@@ -371,11 +363,21 @@ components:
     EditRequestBody:
       type: object
       unevaluatedProperties: false
-      required:
-        - metadata
       properties:
-        metadata:
-          $ref: '#/components/schemas/EditDemMetadata'
+        classification:
+          $ref: '#/components/schemas/Classification'
+        description:
+          $ref: '#/components/schemas/Description'
+        geoidModel:
+          $ref: '#/components/schemas/GeoidModel'
+        keywords:
+          $ref: '#/components/schemas/Keywords'
+        producerName:
+          $ref: '#/components/schemas/ProducerName'
+        productName:
+          $ref: '#/components/schemas/ProductName'
+        region:
+          $ref: '#/components/schemas/Region'
     EditStatusRequestBody:
       type: object
       unevaluatedProperties: false
