@@ -58,14 +58,14 @@ paths:
                 $ref: '#/components/schemas/ErrorMessage'
   /dem/{id}:
     patch:
-      operationId: modify
+      operationId: edit
       tags:
         - dem
-      summary: Modify an existing DEM resource
+      summary: Edit an existing DEM resource
       parameters:
         - name: id
           in: path
-          description: The id of the DEM to modify
+          description: The id of the DEM to edit
           required: true
           schema:
             $ref: '#/components/schemas/LayerId'
@@ -74,7 +74,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ModifyRequestBody'
+              $ref: '#/components/schemas/EditRequestBody'
       responses:
         200:
           description: OK
@@ -163,14 +163,14 @@ paths:
                 $ref: '#/components/schemas/ErrorMessage'
   /dem/{id}/status:
     patch:
-      operationId: modifyStatus
+      operationId: editStatus
       tags:
         - dem
-      summary: Modify status for existing DEM resource
+      summary: Edit status for existing DEM resource
       parameters:
         - name: id
           in: path
-          description: The id of the DEM whose status to modify
+          description: The id of the DEM whose status to edit
           required: true
           schema:
             $ref: '#/components/schemas/LayerId'
@@ -179,7 +179,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ModifyStatusRequestBody'
+              $ref: '#/components/schemas/EditStatusRequestBody'
       responses:
         200:
           description: OK
@@ -352,7 +352,7 @@ components:
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/ShapeMetadata\.shp$
       description: Metadata shape file path
       example: path/to/ShapeMetadata.shp
-    ModifyDemMetadata:
+    EditDemMetadata:
       type: object
       unevaluatedProperties: false
       required:
@@ -368,15 +368,15 @@ components:
         - UNPUBLISHED
         - BEING_DELETED
       description: The status of the DEM
-    ModifyRequestBody:
+    EditRequestBody:
       type: object
       unevaluatedProperties: false
       required:
         - metadata
       properties:
         metadata:
-          $ref: '#/components/schemas/ModifyDemMetadata'
-    ModifyStatusRequestBody:
+          $ref: '#/components/schemas/EditDemMetadata'
+    EditStatusRequestBody:
       type: object
       unevaluatedProperties: false
       required:
