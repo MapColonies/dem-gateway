@@ -314,6 +314,32 @@ components:
       type: string
       description: Layer's description
       minLength: 1
+    EditRequestBody:
+      type: object
+      unevaluatedProperties: false
+      properties:
+        classification:
+          $ref: '#/components/schemas/Classification'
+        description:
+          $ref: '#/components/schemas/Description'
+        geoidModel:
+          $ref: '#/components/schemas/GeoidModel'
+        keywords:
+          $ref: '#/components/schemas/Keywords'
+        producerName:
+          $ref: '#/components/schemas/ProducerName'
+        productName:
+          $ref: '#/components/schemas/ProductName'
+        region:
+          $ref: '#/components/schemas/Region'
+    EditStatusRequestBody:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
     ErrorMessage:
       type: object
       unevaluatedProperties: false
@@ -362,32 +388,6 @@ components:
         - UNPUBLISHED
         - BEING_DELETED
       description: The status of the DEM
-    EditRequestBody:
-      type: object
-      unevaluatedProperties: false
-      properties:
-        classification:
-          $ref: '#/components/schemas/Classification'
-        description:
-          $ref: '#/components/schemas/Description'
-        geoidModel:
-          $ref: '#/components/schemas/GeoidModel'
-        keywords:
-          $ref: '#/components/schemas/Keywords'
-        producerName:
-          $ref: '#/components/schemas/ProducerName'
-        productName:
-          $ref: '#/components/schemas/ProductName'
-        region:
-          $ref: '#/components/schemas/Region'
-    EditStatusRequestBody:
-      type: object
-      unevaluatedProperties: false
-      required:
-        - status
-      properties:
-        status:
-          $ref: '#/components/schemas/Status'
     ProducerName:
       type: string
       default: IDFMU
