@@ -284,6 +284,10 @@ components:
           $ref: '#/components/schemas/DemMetadata'
         inputFiles:
           $ref: '#/components/schemas/InputFiles'
+    DemType:
+      type: string
+      description: DEM type
+      minLength: 0
     GeoTiffDataType:
       type: string
       description: GeoTiff supported data types
@@ -438,9 +442,11 @@ components:
             - noDataValue
           properties:
             demType:
-              type: string
-              enum:
-                - tiff
+              allOf:
+                - $ref: '#/components/schemas/DemType'
+                - type: string
+                  enum:
+                    - geotiff
             dataType:
               $ref: '#/components/schemas/GeoTiffDataType'
             noDataValue:
