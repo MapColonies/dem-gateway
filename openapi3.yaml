@@ -410,10 +410,6 @@ components:
           $ref: '#/components/schemas/SrsId'
         srsName:
           $ref: '#/components/schemas/SrsName'
-    InfoRegularGrids:
-      description: Collection of regular grid responses
-      oneOf:
-        - $ref: '#/components/schemas/InfoGeoTiff'
     InfoRequestBody:
       type: object
       description: Info request body
@@ -430,7 +426,7 @@ components:
       discriminator:
         propertyName: demType
       oneOf:
-        - $ref: '#/components/schemas/InfoRegularGrids'
+        - $ref: '#/components/schemas/InfoGeoTiff'
     InfoGeoTiff:
       description: Info properties of GeoTiff
       allOf:
