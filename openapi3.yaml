@@ -8,10 +8,10 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 tags:
-- name: dem
-  description: APIs for initiating DEM resource operations
-- name: info
-  description: APIs for extraction of info from DEM input
+  - name: dem
+    description: APIs for initiating DEM resource operations
+  - name: info
+    description: APIs for extraction of info from DEM input
 paths:
   /dem:
     post:
@@ -221,7 +221,7 @@ paths:
     post:
       operationId: info
       tags:
-      - info
+        - info
       summary: Extracts GDAL info from the provided DEM file
       requestBody:
         description: An object containing object of DEM input file
@@ -267,8 +267,8 @@ components:
       type: string
       description: Indicates whether each raster pixel represents an area or point
       enum:
-      - Area
-      - Point
+        - Area
+        - Point
     Classification:
       type: string
       description: Permitted roles, value must be between 0 and 100
@@ -288,17 +288,17 @@ components:
       type: string
       description: GeoTiff supported data types
       enum:
-      - Byte
-      - UInt16
-      - Int16
-      - UInt32
-      - Int32
-      - Float32
-      - Float64
-      - CInt16
-      - CInt32
-      - CFloat32
-      - CFloat64
+        - Byte
+        - UInt16
+        - Int16
+        - UInt32
+        - Int32
+        - Float32
+        - Float64
+        - CInt16
+        - CInt32
+        - CFloat32
+        - CFloat64
     DemFilePath:
       type: string
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/[\wא-ת\.-]+\.(tif)$
@@ -390,11 +390,11 @@ components:
       type: object
       description: Common properties of regular grids
       required:
-      - areaOrPoint
-      - resolutionDegrees
-      - resolutionMeter
-      - srsId
-      - srsName
+        - areaOrPoint
+        - resolutionDegrees
+        - resolutionMeter
+        - srsId
+        - srsName
       properties:
         areaOrPoint:
           $ref: '#/components/schemas/AreaOrPoint'
@@ -409,13 +409,13 @@ components:
     InfoRegularGrids:
       description: Collection of regular grid responses
       oneOf:
-      - $ref: '#/components/schemas/InfoGeoTiff'
+        - $ref: '#/components/schemas/InfoGeoTiff'
     InfoRequestBody:
       type: object
       description: Info request body
       unevaluatedProperties: false
       required:
-      - demFilePath
+        - demFilePath
       properties:
         demFilePath:
           $ref: '#/components/schemas/DemFilePath'
@@ -426,25 +426,25 @@ components:
       discriminator:
         propertyName: demType
       oneOf:
-      - $ref: "#/components/schemas/InfoRegularGrids"
+        - $ref: '#/components/schemas/InfoRegularGrids'
     InfoGeoTiff:
       description: Info properties of GeoTiff
       allOf:
-      - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
-      - type: object
-        required:
-        - demType
-        - dataType
-        - noDataValue
-        properties:
-          demType:
-            type: string
-            enum:
-            - tiff
-          dataType:
-            $ref: '#/components/schemas/GeoTiffDataType'
-          noDataValue:
-            $ref: '#/components/schemas/NoDataValue'
+        - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
+        - type: object
+          required:
+            - demType
+            - dataType
+            - noDataValue
+          properties:
+            demType:
+              type: string
+              enum:
+                - tiff
+            dataType:
+              $ref: '#/components/schemas/GeoTiffDataType'
+            noDataValue:
+              $ref: '#/components/schemas/NoDataValue'
     InputFiles:
       type: object
       unevaluatedProperties: false
