@@ -8,10 +8,10 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 tags:
-  - name: dem
-    description: APIs for initiating DEM resource operations
-  - name: validate
-    description: APIs for validation of DEM input
+- name: dem
+  description: APIs for initiating DEM resource operations
+- name: info
+  description: APIs for extraction of info from DEM input
 paths:
   /dem:
     post:
@@ -217,26 +217,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
-  /validate:
+  /info:
     post:
-      operationId: validate
+      operationId: info
       tags:
-        - validate
-      summary: Checks validation for provided DEM file
+      - info
+      summary: Extracts GDAL info from the provided DEM file
       requestBody:
         description: An object containing object of DEM input file
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidateRequestBody'
+              $ref: '#/components/schemas/InfoRequestBody'
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidateResponse'
+                $ref: '#/components/schemas/InfoResponse'
         400:
           description: Bad Request
           content:
@@ -249,6 +249,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
         500:
           description: Internal Server Error
           content:
@@ -257,6 +263,12 @@ paths:
                 $ref: '#/components/schemas/ErrorMessage'
 components:
   schemas:
+    AreaOrPoint:
+      type: string
+      description: Indicates whether each raster pixel represents an area or point
+      enum:
+      - Area
+      - Point
     Classification:
       type: string
       description: Permitted roles, value must be between 0 and 100
@@ -272,6 +284,21 @@ components:
           $ref: '#/components/schemas/DemMetadata'
         inputFiles:
           $ref: '#/components/schemas/InputFiles'
+    GeoTiffDataType:
+      type: string
+      description: GeoTiff supported data types
+      enum:
+      - Byte
+      - UInt16
+      - Int16
+      - UInt32
+      - Int32
+      - Float32
+      - Float64
+      - CInt16
+      - CInt32
+      - CFloat32
+      - CFloat64
     DemFilePath:
       type: string
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/[\wא-ת\.-]+\.(tif)$
@@ -359,6 +386,65 @@ components:
       type: string
       description: Earth's geoid model
       minLength: 1
+    InfoCommonRegularGridProperties:
+      type: object
+      description: Common properties of regular grids
+      required:
+      - areaOrPoint
+      - resolutionDegrees
+      - resolutionMeter
+      - srsId
+      - srsName
+      properties:
+        areaOrPoint:
+          $ref: '#/components/schemas/AreaOrPoint'
+        resolutionDegrees:
+          $ref: '#/components/schemas/ResolutionDegrees'
+        resolutionMeter:
+          $ref: '#/components/schemas/ResolutionMeter'
+        srsId:
+          $ref: '#/components/schemas/SrsId'
+        srsName:
+          $ref: '#/components/schemas/SrsName'
+    InfoRegularGrids:
+      description: Collection of regular grid responses
+      oneOf:
+      - $ref: '#/components/schemas/InfoGeoTiff'
+    InfoRequestBody:
+      type: object
+      description: Info request body
+      unevaluatedProperties: false
+      required:
+      - demFilePath
+      properties:
+        demFilePath:
+          $ref: '#/components/schemas/DemFilePath'
+    InfoResponse:
+      type: object
+      description: Info response body
+      unevaluatedProperties: false
+      discriminator:
+        propertyName: demType
+      oneOf:
+      - $ref: "#/components/schemas/InfoRegularGrids"
+    InfoGeoTiff:
+      description: Info properties of GeoTiff
+      allOf:
+      - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
+      - type: object
+        required:
+        - demType
+        - dataType
+        - noDataValue
+        properties:
+          demType:
+            type: string
+            enum:
+            - tiff
+          dataType:
+            $ref: '#/components/schemas/GeoTiffDataType'
+          noDataValue:
+            $ref: '#/components/schemas/NoDataValue'
     InputFiles:
       type: object
       unevaluatedProperties: false
@@ -386,6 +472,9 @@ components:
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/ShapeMetadata\.shp$
       description: Metadata shape file path
       example: /path/to/ShapeMetadata.shp
+    NoDataValue:
+      type: number
+      description: No data value of DEM
     Status:
       type: string
       default: UNPUBLISHED
@@ -432,48 +521,19 @@ components:
         minLength: 1
       minItems: 1
       description: List of layer's regions
-    ValidateBaseResponse:
-      type: object
-      properties:
-        isValid:
-          type: boolean
-      required:
-        - isValid
-    ValidateFailedResponse:
-      unevaluatedProperties: false
-      allOf:
-        - $ref: '#/components/schemas/ValidateBaseResponse'
-        - type: object
-          properties:
-            isValid:
-              type: boolean
-              enum:
-                - false
-            error:
-              type: string
-              minLength: 1
-              example: File is invalid
-          required:
-            - error
-    ValidateResponse:
-      oneOf:
-        - $ref: '#/components/schemas/ValidateFailedResponse'
-        - $ref: '#/components/schemas/ValidateSuccessfulResponse'
-    ValidateRequestBody:
-      type: object
-      unevaluatedProperties: false
-      required:
-        - demFilePath
-      properties:
-        demFilePath:
-          $ref: '#/components/schemas/DemFilePath'
-    ValidateSuccessfulResponse:
-      unevaluatedProperties: false
-      allOf:
-        - $ref: '#/components/schemas/ValidateBaseResponse'
-        - type: object
-          properties:
-            isValid:
-              type: boolean
-              enum:
-                - true
+    ResolutionDegrees:
+      type: number
+      description: DEM resolution in degrees
+      exclusiveMinimum: 0
+    ResolutionMeter:
+      type: number
+      description: DEM resolution in meters
+      exclusiveMinimum: 0
+    SrsId:
+      type: integer
+      description: Projection code as registered by EPSG
+      exclusiveMinimum: 0
+    SrsName:
+      type: string
+      description: Projection name as registered by EPSG
+      minLength: 0
