@@ -181,12 +181,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EditStatusRequestBody'
       responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DemSuccessfulResponse'
+        204:
+          description: No Content
         400:
           description: Bad Request
           content:
