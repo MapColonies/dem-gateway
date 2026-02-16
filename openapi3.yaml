@@ -417,6 +417,8 @@ components:
       enum:
         - DTM
         - DSM
+        - DTMBest
+        - DSMBest
       description: Layer's type, list of DEM product types
     ProductShapefilePath:
       type: string
