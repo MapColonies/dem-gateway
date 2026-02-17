@@ -482,7 +482,6 @@ components:
       enum:
         - PUBLISHED
         - UNPUBLISHED
-        - BEING_DELETED
       description: The status of the DEM
     ProducerName:
       type: string
