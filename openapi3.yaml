@@ -419,10 +419,13 @@ components:
       type: object
       description: Info response body
       unevaluatedProperties: false
+      required:
+        - demType
       discriminator:
         propertyName: demType
       oneOf:
-        - $ref: '#/components/schemas/InfoGeoTiff'
+        - allOf:
+            - $ref: '#/components/schemas/InfoGeoTiff'
     InfoGeoTiff:
       description: Info properties of GeoTiff
       allOf:
