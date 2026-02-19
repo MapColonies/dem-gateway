@@ -1,106 +1,539 @@
-openapi: 3.0.1
+openapi: 3.1.0
+security: []
 info:
-  title: service-name
-  description: basic template for map colonies service
+  title: dem-gateway
+  description: Gateway for DEM resources manipulation
   version: 1.0.0
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
+tags:
+  - name: dem
+    description: APIs for initiating DEM resource operations
+  - name: info
+    description: APIs for extraction of info from DEM input
 paths:
-  /anotherResource:
-    get:
-      operationId: getAnotherResource
-      tags:
-        - anotherResource
-      summary: gets the resource
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/anotherResource'
-        400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error'
-  /resourceName:
-    get:
-      operationId: getResourceName
-      tags:
-        - resourceName
-      summary: gets the resource
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/resource'
-        400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error'
+  /dem:
     post:
-      operationId: createResource
+      operationId: create
       tags:
-        - resourceName
-      summary: creates a new record of type resource
+        - dem
+      summary: Create a DEM resource
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/resource'
+              $ref: '#/components/schemas/CreateRequestBody'
       responses:
-        201:
-          description: created
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/resource'
+                $ref: '#/components/schemas/DemSuccessfulResponse'
         400:
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error'
-security:
-  - {}
+                $ref: '#/components/schemas/ErrorMessage'
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /dem/{id}:
+    patch:
+      operationId: edit
+      tags:
+        - dem
+      summary: Edit an existing DEM resource
+      parameters:
+        - name: id
+          in: path
+          description: The id of the DEM to edit
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditRequestBody'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemSuccessfulResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      operationId: delete
+      tags:
+        - dem
+      summary: Delete an existing DEM resource
+      parameters:
+        - name: id
+          in: path
+          description: The id of the DEM to delete
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemSuccessfulResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /dem/{id}/status:
+    patch:
+      operationId: editStatus
+      tags:
+        - dem
+      summary: Edit status for existing DEM resource
+      parameters:
+        - name: id
+          in: path
+          description: The id of the DEM whose status to edit
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditStatusRequestBody'
+      responses:
+        204:
+          description: No Content
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /info:
+    post:
+      operationId: info
+      tags:
+        - info
+      summary: Extracts GDAL info from the provided DEM file
+      requestBody:
+        description: An object containing object of DEM input file
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoRequestBody'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        422:
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
 components:
   schemas:
-    error:
+    AreaOrPoint:
+      type: string
+      description: Indicates whether each raster pixel represents an area or point
+      enum:
+        - Area
+        - Point
+    Classification:
+      type: string
+      description: Permitted roles, value must be between 0 and 100
+      pattern: ^[0-9]$|^[1-9][0-9]$|^(100)$
+    CreateRequestBody:
       type: object
+      unevaluatedProperties: false
+      required:
+        - metadata
+        - inputFiles
+      properties:
+        metadata:
+          $ref: '#/components/schemas/DemMetadata'
+        inputFiles:
+          $ref: '#/components/schemas/InputFiles'
+    DemType:
+      type: string
+      description: DEM type
+      minLength: 0
+    GeoTiffDataType:
+      type: string
+      description: GeoTiff supported data types
+      enum:
+        - Byte
+        - UInt16
+        - Int16
+        - UInt32
+        - Int32
+        - Float32
+        - Float64
+        - CInt16
+        - CInt32
+        - CFloat32
+        - CFloat64
+    DemFilePath:
+      type: string
+      pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/[\wא-ת\.-]+\.(tif)$
+      description: Input file paths
+      example: /path/to/example.tif
+    DemMetadata:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - classification
+        - productId
+        - productName
+        - productType
+        - region
+      properties:
+        classification:
+          $ref: '#/components/schemas/Classification'
+        productId:
+          $ref: '#/components/schemas/ProductId'
+        productName:
+          $ref: '#/components/schemas/ProductName'
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        region:
+          $ref: '#/components/schemas/Region'
+        description:
+          $ref: '#/components/schemas/Description'
+        geoidModel:
+          $ref: '#/components/schemas/GeoidModel'
+        keywords:
+          $ref: '#/components/schemas/Keywords'
+        producerName:
+          $ref: '#/components/schemas/ProducerName'
+        productSubType:
+          $ref: '#/components/schemas/ProductSubType'
+    DemSuccessfulResponse:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - jobId
+      properties:
+        jobId:
+          type: string
+          format: uuid
+    Description:
+      type: string
+      description: Layer's description
+      minLength: 1
+    EditRequestBody:
+      type: object
+      unevaluatedProperties: false
+      properties:
+        classification:
+          $ref: '#/components/schemas/Classification'
+        description:
+          $ref: '#/components/schemas/Description'
+        geoidModel:
+          $ref: '#/components/schemas/GeoidModel'
+        keywords:
+          $ref: '#/components/schemas/Keywords'
+        producerName:
+          $ref: '#/components/schemas/ProducerName'
+        productName:
+          $ref: '#/components/schemas/ProductName'
+        region:
+          $ref: '#/components/schemas/Region'
+    EditStatusRequestBody:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+    ErrorMessage:
+      type: object
+      unevaluatedProperties: false
       required:
         - message
       properties:
         message:
           type: string
-    resource:
+          minLength: 1
+    GeoidModel:
+      type: string
+      description: Earth's geoid model
+      minLength: 1
+    InfoCommonRegularGridProperties:
       type: object
+      description: Common properties of regular grids
       required:
-        - id
-        - name
-        - description
+        - areaOrPoint
+        - resolutionDegrees
+        - resolutionMeter
+        - srsId
+        - srsName
       properties:
-        id:
-          type: number
-          format: int64
-        name:
-          type: string
-        description:
-          type: string
-    anotherResource:
+        areaOrPoint:
+          $ref: '#/components/schemas/AreaOrPoint'
+        resolutionDegrees:
+          $ref: '#/components/schemas/ResolutionDegrees'
+        resolutionMeter:
+          $ref: '#/components/schemas/ResolutionMeter'
+        srsId:
+          $ref: '#/components/schemas/SrsId'
+        srsName:
+          $ref: '#/components/schemas/SrsName'
+    InfoRequestBody:
       type: object
+      description: Info request body
+      unevaluatedProperties: false
       required:
-        - kind
-        - isAlive
+        - demFilePath
       properties:
-        kind:
-          type: string
-        isAlive:
-          type: boolean
+        demFilePath:
+          $ref: '#/components/schemas/DemFilePath'
+    InfoResponse:
+      type: object
+      description: Info response body
+      unevaluatedProperties: false
+      required:
+        - demType
+      discriminator:
+        propertyName: demType
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/InfoGeoTiff'
+    InfoGeoTiff:
+      description: Info properties of GeoTiff
+      allOf:
+        - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
+        - type: object
+          required:
+            - demType
+            - dataType
+            - noDataValue
+          properties:
+            demType:
+              allOf:
+                - $ref: '#/components/schemas/DemType'
+                - type: string
+                  enum:
+                    - geotiff
+            dataType:
+              $ref: '#/components/schemas/GeoTiffDataType'
+            noDataValue:
+              $ref: '#/components/schemas/NoDataValue'
+    InputFiles:
+      type: object
+      unevaluatedProperties: false
+      required:
+        - demFilePath
+        - metadataShapefilePath
+        - productShapefilePath
+      properties:
+        demFilePath:
+          $ref: '#/components/schemas/DemFilePath'
+        metadataShapefilePath:
+          $ref: '#/components/schemas/MetadataShapefilePath'
+        productShapefilePath:
+          $ref: '#/components/schemas/ProductShapefilePath'
+    Keywords:
+      type: string
+      minLength: 1
+    LayerId:
+      type: string
+      format: uuid
+      description: Layer's identifier
+      example: c52d8189-7e07-456a-8c6b-53859523c3e9
+    MetadataShapefilePath:
+      type: string
+      pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/ShapeMetadata\.shp$
+      description: Metadata shape file path
+      example: /path/to/ShapeMetadata.shp
+    NoDataValue:
+      type: number
+      description: No data value of DEM
+    Status:
+      type: string
+      default: UNPUBLISHED
+      enum:
+        - PUBLISHED
+        - UNPUBLISHED
+      description: The status of the DEM
+    ProducerName:
+      type: string
+      default: IDFMU
+      description: Layer's producer name default to 'IDFMU'
+      minLength: 1
+    ProductId:
+      type: string
+      pattern: ^[A-Za-z]{1}[A-Za-z0-9_]{0,34}$
+      description: Layer's external identifier, must start with a letter and contain only letters, numbers and underscores
+      example: SRTM
+    ProductName:
+      type: string
+      description: Layer's external name
+      minLength: 1
+    ProductSubType:
+      type: string
+      description: Layer's sub type
+      minLength: 1
+    ProductType:
+      type: string
+      enum:
+        - DTM
+        - DSM
+        - DTMBest
+        - DSMBest
+      description: Layer's type, list of DEM product types
+    ProductShapefilePath:
+      type: string
+      pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/Product\.shp$
+      description: Product shape file path
+      example: /path/to/Product.shp
+    Region:
+      type: array
+      items:
+        type: string
+        minLength: 1
+      minItems: 1
+      description: List of layer's regions
+    ResolutionDegrees:
+      type: number
+      description: DEM resolution in degrees
+      exclusiveMinimum: 0
+    ResolutionMeter:
+      type: number
+      description: DEM resolution in meters
+      exclusiveMinimum: 0
+    SrsId:
+      type: integer
+      description: Projection code as registered by EPSG
+      exclusiveMinimum: 0
+    SrsName:
+      type: string
+      description: Projection name as registered by EPSG
+      minLength: 0
