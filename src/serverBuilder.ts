@@ -1,18 +1,18 @@
-import express, { Router } from 'express';
+import { getErrorHandlerMiddleware } from '@map-colonies/error-express-handler';
+import { httpLogger } from '@map-colonies/express-access-log-middleware';
+import type { Logger } from '@map-colonies/js-logger';
+import { OpenapiViewerRouter } from '@map-colonies/openapi-express-viewer';
+import { collectMetricsExpressMiddleware } from '@map-colonies/prometheus';
 import bodyParser from 'body-parser';
 import compression from 'compression';
-import { OpenapiViewerRouter } from '@map-colonies/openapi-express-viewer';
-import { getErrorHandlerMiddleware } from '@map-colonies/error-express-handler';
+import express, { Router } from 'express';
 import { middleware as OpenApiMiddleware } from 'express-openapi-validator';
-import { inject, injectable } from 'tsyringe';
-import type { Logger } from '@map-colonies/js-logger';
-import { httpLogger } from '@map-colonies/express-access-log-middleware';
-import { collectMetricsExpressMiddleware } from '@map-colonies/prometheus';
 import { Registry } from 'prom-client';
+import { inject, injectable } from 'tsyringe';
 import type { ConfigType } from '@common/config';
 import { SERVICES } from '@common/constants';
-import { RESOURCE_NAME_ROUTER_SYMBOL } from './resourceName/routes/resourceNameRouter';
-import { ANOTHER_RESOURCE_ROUTER_SYMBOL } from './anotherResource/routes/anotherResourceRouter';
+import { DEM_ROUTER_SYMBOL } from './dem/routes/demRouter';
+import { INFO_ROUTER_SYMBOL } from './info/routes/infoRouter';
 
 @injectable()
 export class ServerBuilder {
@@ -22,8 +22,8 @@ export class ServerBuilder {
     @inject(SERVICES.CONFIG) private readonly config: ConfigType,
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.METRICS) private readonly metricsRegistry: Registry,
-    @inject(RESOURCE_NAME_ROUTER_SYMBOL) private readonly resourceNameRouter: Router,
-    @inject(ANOTHER_RESOURCE_ROUTER_SYMBOL) private readonly anotherResourceRouter: Router
+    @inject(DEM_ROUTER_SYMBOL) private readonly demRouter: Router,
+    @inject(INFO_ROUTER_SYMBOL) private readonly infoRouter: Router
   ) {
     this.serverInstance = express();
   }
@@ -46,8 +46,8 @@ export class ServerBuilder {
   }
 
   private buildRoutes(): void {
-    this.serverInstance.use('/resourceName', this.resourceNameRouter);
-    this.serverInstance.use('/anotherResource', this.anotherResourceRouter);
+    this.serverInstance.use('/dem', this.demRouter);
+    this.serverInstance.use('/info', this.infoRouter);
     this.buildDocsRoutes();
   }
 
