@@ -1,35 +1,53 @@
 import type { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
-import { injectable, inject } from 'tsyringe';
-import { type Registry, Counter } from 'prom-client';
+import { inject, injectable } from 'tsyringe';
 import type { TypedRequestHandlers } from '@openapi';
-import { SERVICES } from '@common/constants';
-
+import { SERVICES } from '@src/common/constants';
 import { DEMManager } from '../models/demManager';
 
 @injectable()
 export class DEMController {
-  private readonly demEditCounter: Counter;
-
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(DEMManager) private readonly demManager: DEMManager,
-    @inject(SERVICES.METRICS) private readonly metricsRegistry: Registry
-  ) {
-    this.demEditCounter = new Counter({
-      name: 'edit',
-      help: 'number of edit requests',
-      registers: [this.metricsRegistry],
-    });
-  }
+    @inject(DEMManager) private readonly demManager: DEMManager
+  ) {}
+
+  public create: TypedRequestHandlers['create'] = (req, res, next) => {
+    try {
+      const response = this.demManager.create(req.body);
+      return res.status(httpStatus.OK).json(response);
+    } catch (error) {
+      this.logger.error(error);
+      next(error);
+    }
+  };
+
+  public delete: TypedRequestHandlers['delete'] = (req, res, next) => {
+    try {
+      const response = this.demManager.delete(req.params);
+      return res.status(httpStatus.OK).json(response);
+    } catch (error) {
+      this.logger.error(error);
+      next(error);
+    }
+  };
 
   public edit: TypedRequestHandlers['edit'] = (req, res, next) => {
     try {
-      this.demEditCounter.inc(1);
       const response = this.demManager.edit({ ...req.params, ...req.body });
       return res.status(httpStatus.OK).json(response);
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
+      next(error);
+    }
+  };
+
+  public editStatus: TypedRequestHandlers['editStatus'] = (req, res, next) => {
+    try {
+      this.demManager.editStatus({ ...req.params, ...req.body });
+      return res.status(httpStatus.NO_CONTENT).send();
+    } catch (error) {
+      this.logger.error(error);
       next(error);
     }
   };

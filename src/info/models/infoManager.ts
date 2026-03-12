@@ -1,5 +1,7 @@
-import { injectable, injectAll } from 'tsyringe';
 import { UnprocessableEntityError } from '@map-colonies/error-types';
+import type { Logger } from '@map-colonies/js-logger';
+import { inject, injectable, injectAll } from 'tsyringe';
+import { SERVICES } from '@src/common/constants';
 import { components } from '@src/openapi';
 
 export type InfoOptions = components['schemas']['InfoRequestBody'];
@@ -11,12 +13,17 @@ export interface FileHandler {
 
 @injectable()
 export class InfoManager {
-  public constructor(@injectAll('FileHandler') private readonly fileHandlers: FileHandler[]) {}
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @injectAll('FileHandler') private readonly fileHandlers: FileHandler[]
+  ) {}
 
   public async info(options: InfoOptions): Promise<InfoResponse> {
     const { demFilePath } = options;
 
+    this.logger.debug({ msg: `Handling info request`, resource: options });
     const response = await this.process(demFilePath);
+    this.logger.debug({ msg: `Info response`, response });
 
     return response;
   }

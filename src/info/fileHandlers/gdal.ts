@@ -32,21 +32,23 @@ export class GDALHandler implements FileHandler {
   public supports(filePath: string): boolean {
     try {
       this.getDriver(filePath);
+      this.logger.debug({ msg: `Handler '${GDALHandler.name}' supports the requested file` });
       return true;
     } catch (error) {
-      this.logger.debug(error);
+      this.logger.debug({ msg: `Handler '${GDALHandler.name}' cannot handle the requested file, caused by an error: ${JSON.stringify(error)}` });
       return false;
     }
   }
 
   public async getInfo(filePath: string): Promise<InfoResponse> {
-    this.logger.info(`Getting info for ${filePath}`);
+    this.logger.info({ msg: `Getting info for ${filePath}` });
     let dataset: Dataset | undefined;
 
     const fullFilePath = join(this.sourceDir, filePath);
     try {
       await access(fullFilePath, constants.F_OK);
     } catch (error) {
+      this.logger.error({ msg: `Cannot find file: ${fullFilePath}`, err: error });
       throw new NotFoundError(`Cannot find file: ${fullFilePath}. got error: ${JSON.stringify(error)}`);
     }
 
