@@ -1,14 +1,14 @@
 import { access, constants } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { Driver, drivers, openAsync, SpatialReference, type Dataset } from 'gdal-async';
+import type { Dataset, Driver, SpatialReference } from 'gdal-async';
 import { inject, injectable } from 'tsyringe';
 import { z } from 'zod';
 import { NotFoundError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
 import type { ConfigType } from '@src/common/config';
 import { SERVICES } from '@src/common/constants';
-import { getPixelInfo, getResolutions, getSrsInfo } from '@src/common/gdal';
-import { areaOrPointSchema, noDataValueSchema, pixelDataTypesSchema } from '@src/common/schemas';
+import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
+import { areaOrPointSchema, noDataValueSchema, pixelDataTypesSchema, srsIdSchema } from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
 
 @injectable()
@@ -20,10 +20,11 @@ export class GDALHandler implements FileHandler {
 
   public constructor(
     @inject(SERVICES.CONFIG) private readonly config: ConfigType,
-    @inject(SERVICES.LOGGER) private readonly logger: Logger
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(GDAL_ASYNC) private readonly gdal: GdalAsync
   ) {
-    this.defaultGeographicSrs = SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId') as unknown as number);
-    this.defaultProjectedSrs = SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId') as unknown as number);
+    this.defaultGeographicSrs = this.gdal.SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId') as unknown as number);
+    this.defaultProjectedSrs = this.gdal.SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId') as unknown as number);
     this.supportedFormatsMap = this.config.get('application.supportedFormatsMap') as unknown as Record<string, string>;
     this.sourceDir = this.config.get('storageExplorer.sourceDir') as unknown as string;
   }
@@ -39,7 +40,7 @@ export class GDALHandler implements FileHandler {
   }
 
   public async getInfo(filePath: string): Promise<InfoResponse> {
-    this.logger.info(`getting info for ${filePath}`);
+    this.logger.info(`Getting info for ${filePath}`);
     let dataset: Dataset | undefined;
 
     const fullFilePath = join(this.sourceDir, filePath);
@@ -48,28 +49,30 @@ export class GDALHandler implements FileHandler {
     } catch (error) {
       throw new NotFoundError(`Cannot find file: ${fullFilePath}. got error: ${JSON.stringify(error)}`);
     }
+
     try {
-      const dataset = await openAsync(fullFilePath, 'r');
+      const driver = this.getDriver(filePath);
+      const dataset = await driver.openAsync(fullFilePath, 'r');
 
-      const driverName = dataset.driver.description.toLowerCase();
-      const supportedFormat = Object.entries(this.supportedFormatsMap).find(([, value]) => value === driverName)?.[0];
-      if (supportedFormat === undefined) throw new Error('Unsupported DEM format');
-
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const metadata = await dataset.getMetadataAsync();
       const areaOrPoint = z
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        .object({ AREA_OR_POINT: areaOrPointSchema }, { error: 'Could not extract AREA_OR_POINT metadata' })
-        .parse(await dataset.getMetadataAsync()).AREA_OR_POINT;
+        .object({ AREA_OR_POINT: areaOrPointSchema })
+        .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
 
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
 
-      const dataType = pixelDataTypesSchema.parse(await band.dataTypeAsync);
+      const bandDataType = await band.dataTypeAsync;
+      const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });
 
-      const noDataValue = noDataValueSchema.parse(await band.noDataValueAsync);
+      const bandNoDataValueAsync = await band.noDataValueAsync;
+      const noDataValue = noDataValueSchema.parse(bandNoDataValueAsync, { error: () => 'Unsupported band nodata value' });
 
       const srs = await dataset.srsAsync;
       if (srs === null) throw new Error('Unsupported SRS');
-
       const { srsId, srsName } = getSrsInfo(srs);
+      srsIdSchema.parse(srsId, { error: () => 'Unsupported SRS' });
 
       const geoTransform = await dataset.geoTransformAsync;
 
@@ -98,7 +101,7 @@ export class GDALHandler implements FileHandler {
   private getDriver(filePath: string): Driver {
     const fileExtension = extname(filePath).slice(1);
     const supportedDriver = Object.values(this.supportedFormatsMap).find((supportedDriver) => {
-      const driver = drivers.get(supportedDriver);
+      const driver = this.gdal.drivers.get(supportedDriver);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const driverMetadata = driver.getMetadata() as { DMD_EXTENSION?: string; DMD_EXTENSIONS?: string };
       const { DMD_EXTENSION: extension = '', DMD_EXTENSIONS: extensions = '' } = driverMetadata;
@@ -106,6 +109,6 @@ export class GDALHandler implements FileHandler {
     });
 
     if (supportedDriver === undefined) throw new Error(`Unsupported file format of file: ${filePath}`);
-    return drivers.get(supportedDriver);
+    return this.gdal.drivers.get(supportedDriver);
   }
 }

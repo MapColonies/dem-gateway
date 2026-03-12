@@ -1,7 +1,9 @@
+import { UnprocessableEntityError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
-import { type Registry, Counter } from 'prom-client';
 import httpStatus from 'http-status-codes';
-import { injectable, inject } from 'tsyringe';
+import { type Registry, Counter } from 'prom-client';
+import { inject, injectable } from 'tsyringe';
+import { ZodError } from 'zod';
 import type { TypedRequestHandlers } from '@openapi';
 import { SERVICES } from '@common/constants';
 import { InfoManager } from '../models/infoManager';
@@ -29,6 +31,9 @@ export class InfoController {
       return res.status(httpStatus.OK).json(response);
     } catch (error) {
       this.logger.error(error);
+      if (error instanceof ZodError) {
+        return next(new UnprocessableEntityError(error.issues[0]?.message ?? 'validation error'));
+      }
       next(error);
     }
   };

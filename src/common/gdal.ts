@@ -1,32 +1,22 @@
-import epsg from 'epsg-index/all.json';
 import { CoordinateTransformation, SpatialReference, type Dataset, type Envelope, type xyz } from 'gdal-async';
+import * as gdalAsync from 'gdal-async';
 import { z } from 'zod';
 import type { InfoResponse } from '@src/info/models/infoManager';
+import { EPSG_DATA_RECORDS } from './epsg';
 
 interface PixelInfo {
   pixelWidth: number;
   pixelHeight: number;
 }
 
-const epsgRecordSchema = z.object({
-  code: z.string(),
-  kind: z.string(),
-  name: z.string(),
-  wkt: z.string().nullable(),
-  proj4: z.string().nullable(),
-  bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-  unit: z.string().nullable(),
-  area: z.string().nullable(),
-  accuracy: z.number().nullable(),
-});
-
-const epsgRecords = z.record(z.coerce.number().int().positive(), epsgRecordSchema).parse(epsg);
-
 const geoTransformSchema = z.tuple([z.number(), z.number(), z.number(), z.number(), z.number(), z.number()]);
+
+export type GdalAsync = typeof gdalAsync;
+export const GDAL_ASYNC = Symbol('gdal');
 
 export const getPixelInfo = (options: Pick<Dataset, 'geoTransform'>): PixelInfo => {
   const { geoTransform } = options;
-  const validGeoTransform = geoTransformSchema.parse(geoTransform);
+  const validGeoTransform = geoTransformSchema.parse(geoTransform, { error: () => 'Unsupported geo transform' });
   return { pixelHeight: Math.abs(validGeoTransform[5]), pixelWidth: Math.abs(validGeoTransform[1]) };
 };
 
@@ -105,7 +95,7 @@ export const getSrsName = (srsId: number): string => {
 
 export const getSrsGeographicBounds = (options: { srsId: number }): [number, number, number, number] => {
   const { srsId } = options;
-  const epsgRecord = epsgRecords[srsId];
+  const epsgRecord = EPSG_DATA_RECORDS[srsId];
   if (!epsgRecord) throw new Error('Unsupported SRS');
 
   const [sourceMaxY, sourceMinX, sourceMinY, sourceMaxX] = epsgRecord.bbox;

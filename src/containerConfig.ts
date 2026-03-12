@@ -1,12 +1,14 @@
 import { jsLogger } from '@map-colonies/js-logger';
 import { getOtelMixin } from '@map-colonies/tracing-utils';
 import { trace } from '@opentelemetry/api';
+import * as gdalAsync from 'gdal-async';
 import { Registry } from 'prom-client';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
+import { getConfig } from '@common/config';
 import { SERVICES, SERVICE_NAME } from '@common/constants';
 import { InjectionObject, registerDependencies } from '@common/dependencyRegistration';
+import { GDAL_ASYNC } from '@common/gdal';
 import { getTracing } from '@common/tracing';
-import { getConfig } from './common/config';
 import { DEM_ROUTER_SYMBOL, demRouterFactory } from './dem/routes/demRouter';
 import { GDALHandler } from './info/fileHandlers/gdal';
 import { INFO_ROUTER_SYMBOL, infoRouterFactory } from './info/routes/infoRouter';
@@ -33,6 +35,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     { token: SERVICES.METRICS, provider: { useValue: metricsRegistry } },
     { token: DEM_ROUTER_SYMBOL, provider: { useFactory: demRouterFactory } },
+    { token: GDAL_ASYNC, provider: { useValue: gdalAsync } },
     { token: 'FileHandler', provider: { useClass: GDALHandler } },
     { token: INFO_ROUTER_SYMBOL, provider: { useFactory: infoRouterFactory } },
     {
