@@ -76,7 +76,7 @@ export class GDALHandler implements FileHandler {
 
       const geoTransform = await dataset.geoTransformAsync;
 
-      const { resolutionDegrees, resolutionMeter } = getResolutions({
+      const { resolutionDegree, resolutionMeter } = getResolutions({
         ...dataset.bands.getEnvelope(),
         ...getPixelInfo({ geoTransform }),
         targetGeographicSrs: this.defaultGeographicSrs,
@@ -88,7 +88,7 @@ export class GDALHandler implements FileHandler {
         areaOrPoint,
         dataType,
         noDataValue,
-        resolutionDegrees,
+        resolutionDegree,
         resolutionMeter,
         srsId,
         srsName,

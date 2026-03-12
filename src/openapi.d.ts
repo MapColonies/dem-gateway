@@ -137,7 +137,7 @@ export type components = {
     /** @description Common properties of regular grids */
     InfoCommonRegularGridProperties: {
       areaOrPoint: components['schemas']['AreaOrPoint'];
-      resolutionDegrees: components['schemas']['ResolutionDegrees'];
+      resolutionDegree: components['schemas']['ResolutionDegree'];
       resolutionMeter: components['schemas']['ResolutionMeter'];
       srsId: components['schemas']['SrsId'];
       srsName: components['schemas']['SrsName'];
@@ -204,7 +204,7 @@ export type components = {
     /** @description List of layer's regions */
     Region: string[];
     /** @description DEM resolution in degrees */
-    ResolutionDegrees: number;
+    ResolutionDegree: number;
     /** @description DEM resolution in meters */
     ResolutionMeter: number;
     /** @description Projection code as registered by EPSG */

@@ -385,15 +385,15 @@ components:
       description: Common properties of regular grids
       required:
         - areaOrPoint
-        - resolutionDegrees
+        - resolutionDegree
         - resolutionMeter
         - srsId
         - srsName
       properties:
         areaOrPoint:
           $ref: '#/components/schemas/AreaOrPoint'
-        resolutionDegrees:
-          $ref: '#/components/schemas/ResolutionDegrees'
+        resolutionDegree:
+          $ref: '#/components/schemas/ResolutionDegree'
         resolutionMeter:
           $ref: '#/components/schemas/ResolutionMeter'
         srsId:
@@ -506,7 +506,7 @@ components:
         minLength: 1
       minItems: 1
       description: List of layer's regions
-    ResolutionDegrees:
+    ResolutionDegree:
       type: number
       description: DEM resolution in degrees
       exclusiveMinimum: 0

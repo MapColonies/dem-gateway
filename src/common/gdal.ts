@@ -27,7 +27,7 @@ export const getResolutions = (
     targetProjectedSrs: SpatialReference | number;
   } & Pick<Envelope, 'minX' | 'minY' | 'maxX' | 'maxY'> &
     PixelInfo
-): Pick<InfoResponse, 'resolutionDegrees' | 'resolutionMeter'> => {
+): Pick<InfoResponse, 'resolutionDegree' | 'resolutionMeter'> => {
   const { targetGeographicSrs, targetProjectedSrs, maxX, maxY, minX, minY, pixelHeight, pixelWidth, sourceSrs } = options;
   const resolvedSourceSrs = typeof sourceSrs === 'number' ? SpatialReference.fromEPSG(sourceSrs) : sourceSrs;
   const resolvedTargetGeographicSrs = typeof targetGeographicSrs === 'number' ? SpatialReference.fromEPSG(targetGeographicSrs) : targetGeographicSrs;
@@ -65,9 +65,9 @@ export const getResolutions = (
 
   const resolutions = (
     [
-      [resolvedSourceSrs.isGeographic(), { resolutionMeter: getReprojectedResolution(resolvedTargetProjectedSrs), resolutionDegrees: pixelHeight }],
-      [resolvedSourceSrs.isProjected(), { resolutionMeter: pixelHeight, resolutionDegrees: getReprojectedResolution(resolvedTargetGeographicSrs) }],
-    ] satisfies [boolean, { resolutionMeter: number; resolutionDegrees: number }][]
+      [resolvedSourceSrs.isGeographic(), { resolutionMeter: getReprojectedResolution(resolvedTargetProjectedSrs), resolutionDegree: pixelHeight }],
+      [resolvedSourceSrs.isProjected(), { resolutionMeter: pixelHeight, resolutionDegree: getReprojectedResolution(resolvedTargetGeographicSrs) }],
+    ] satisfies [boolean, { resolutionMeter: number; resolutionDegree: number }][]
   ).find((value) => value[0])?.[1];
 
   if (resolutions == undefined) {
