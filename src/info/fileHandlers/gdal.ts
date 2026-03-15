@@ -8,7 +8,7 @@ import type { Logger } from '@map-colonies/js-logger';
 import type { ConfigType } from '@src/common/config';
 import { SERVICES } from '@src/common/constants';
 import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
-import { areaOrPointSchema, noDataValueSchema, pixelDataTypesSchema, srsIdSchema } from '@src/common/schemas';
+import { areaOrPointSchema, noDataValueSchema, pixelDataTypesSchema, srsIdSchema, srsNameSchema } from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
 
 @injectable()
@@ -73,8 +73,8 @@ export class GDALHandler implements FileHandler {
 
       const srs = await dataset.srsAsync;
       if (srs === null) throw new Error('Unsupported SRS');
-      const { srsId, srsName } = getSrsInfo(srs);
-      srsIdSchema.parse(srsId, { error: () => 'Unsupported SRS' });
+      const srsInfo = getSrsInfo(srs);
+      const { srsId, srsName } = z.strictObject({ srsId: srsIdSchema, srsName: srsNameSchema }).parse(srsInfo, { error: () => 'Unsupported SRS' });
 
       const geoTransform = await dataset.geoTransformAsync;
 

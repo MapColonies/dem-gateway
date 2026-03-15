@@ -11,6 +11,7 @@ export const noDataValueSchema = z.union([z.number(), z.nan()]).transform((value
 export const pixelDataTypesSchema = z.union([z.literal(GEOTIFF_DATA_TYPES)]); // add additional data types to union for each supported format
 export const pixelSchema = z.number().positive();
 export const srsIdSchema = z.literal(supportedSrsIds);
+export const srsNameSchema = z.string().min(1);
 
 export const epsgRecordSchema = z.object({
   code: z.string(),
