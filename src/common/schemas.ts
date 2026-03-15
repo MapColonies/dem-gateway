@@ -13,7 +13,7 @@ export const pixelSchema = z.number().positive();
 export const srsIdSchema = z.literal(supportedSrsIds);
 export const srsNameSchema = z.string().min(1);
 
-export const epsgRecordSchema = z.object({
+export const epsgRecordSchema = z.strictObject({
   code: z.string(),
   kind: z.string(),
   name: z.string(),

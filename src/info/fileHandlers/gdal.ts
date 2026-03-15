@@ -60,7 +60,7 @@ export class GDALHandler implements FileHandler {
       const metadata = await dataset.getMetadataAsync();
       const areaOrPoint = z
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        .object({ AREA_OR_POINT: areaOrPointSchema })
+        .strictObject({ AREA_OR_POINT: areaOrPointSchema })
         .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
 
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
