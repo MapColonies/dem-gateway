@@ -1,6 +1,6 @@
 import { access, constants } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import type { Dataset, Driver, SpatialReference } from 'gdal-async';
+import { type Dataset, type Driver, SpatialReference } from 'gdal-async';
 import { inject, injectable } from 'tsyringe';
 import { z } from 'zod';
 import { NotFoundError } from '@map-colonies/error-types';
@@ -23,8 +23,8 @@ export class GDALHandler implements FileHandler {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(GDAL_ASYNC) private readonly gdal: GdalAsync
   ) {
-    this.defaultGeographicSrs = this.gdal.SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId') as unknown as number);
-    this.defaultProjectedSrs = this.gdal.SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId') as unknown as number);
+    this.defaultGeographicSrs = SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId') as unknown as number);
+    this.defaultProjectedSrs = SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId') as unknown as number);
     this.supportedFormatsMap = this.config.get('application.supportedFormatsMap') as unknown as Record<string, string>;
     this.sourceDir = this.config.get('storageExplorer.sourceDir') as unknown as string;
   }
