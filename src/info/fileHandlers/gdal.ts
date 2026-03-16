@@ -54,7 +54,7 @@ export class GDALHandler implements FileHandler {
 
     try {
       const driver = this.getDriver(filePath);
-      const dataset = await driver.openAsync(fullFilePath, 'r');
+      dataset = await driver.openAsync(fullFilePath, 'r');
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const metadata = await dataset.getMetadataAsync();
