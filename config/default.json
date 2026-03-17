@@ -34,8 +34,12 @@
     "sourceDir": ""
   },
   "application": {
+    "blockSize": 256,
+    "compression": "LZW",
     "defaultGeographicSrsId": 4326,
     "defaultProjectedSrsId": 3395,
+    "resolutionDegree": { "min": 0.00000009060870470168063430786, "max": 0.08982 },
+    "resolutionMeter": { "min": 0.01, "max": 10000 },
     "supportedFormatsMap": {
       "geotiff": "gtiff"
     },

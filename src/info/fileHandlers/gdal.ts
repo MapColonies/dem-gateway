@@ -1,14 +1,24 @@
 import { access, constants } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { type Dataset, type Driver, SpatialReference } from 'gdal-async';
-import { inject, injectable } from 'tsyringe';
-import { z } from 'zod';
 import { NotFoundError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
+import { SpatialReference, type Dataset, type Driver } from 'gdal-async';
+import { inject, injectable } from 'tsyringe';
+import { z } from 'zod';
 import type { ConfigType } from '@src/common/config';
 import { SERVICES } from '@src/common/constants';
 import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
-import { areaOrPointSchema, noDataValueSchema, pixelDataTypesSchema, srsIdSchema, srsNameSchema } from '@src/common/schemas';
+import {
+  areaOrPointSchema,
+  blockSizeSchema,
+  compressionSchema,
+  layoutSchema,
+  noDataValueSchema,
+  overviewsCount,
+  pixelDataTypesSchema,
+  srsIdSchema,
+  srsNameSchema,
+} from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
 
 @injectable()
@@ -63,7 +73,20 @@ export class GDALHandler implements FileHandler {
         .object({ AREA_OR_POINT: areaOrPointSchema })
         .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const metadataImageStructure = await dataset.getMetadataAsync('IMAGE_STRUCTURE');
+      void z
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        .object({ LAYOUT: layoutSchema, COMPRESSION: compressionSchema })
+        .parse(metadataImageStructure, { error: () => 'Could not extract LAYOUT metadata' }).LAYOUT;
+
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
+
+      const bandBlockSize = await band.blockSizeAsync;
+      blockSizeSchema.parse(bandBlockSize);
+
+      const bandOverviewsCount = await band.overviews.countAsync();
+      overviewsCount.parse(bandOverviewsCount);
 
       const bandDataType = await band.dataTypeAsync;
       const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });

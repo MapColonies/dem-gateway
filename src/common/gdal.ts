@@ -3,6 +3,7 @@ import * as gdalAsync from 'gdal-async';
 import { z } from 'zod';
 import type { InfoResponse } from '@src/info/models/infoManager';
 import { EPSG_DATA_RECORDS } from './epsg';
+import { resolutionDegreeSchema, resolutionMeterSchema } from './schemas';
 
 interface PixelInfo {
   pixelWidth: number;
@@ -74,7 +75,9 @@ export const getResolutions = (
     throw new Error('Unsupported SRS type');
   }
 
-  return resolutions;
+  const response = z.strictObject({ resolutionMeter: resolutionMeterSchema, resolutionDegree: resolutionDegreeSchema }).parse(resolutions);
+
+  return response;
 };
 
 export const getSrsName = (srsId: number): string => {
