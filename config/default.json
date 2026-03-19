@@ -31,7 +31,12 @@
     }
   },
   "storageExplorer": {
-    "sourceDir": ""
+    "sourceDir": "",
+    "displayNameDir": "layerSources",
+    "validFileExtensions": ["tif"]
+  },
+  "jobnik": {
+    "baseUrl": "http://localhost:3000"
   },
   "application": {
     "validation": {

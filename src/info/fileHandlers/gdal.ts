@@ -33,10 +33,10 @@ export class GDALHandler implements FileHandler {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(GDAL_ASYNC) private readonly gdal: GdalAsync
   ) {
-    this.defaultGeographicSrs = SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId') as unknown as number);
-    this.defaultProjectedSrs = SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId') as unknown as number);
-    this.supportedFormatsMap = this.config.get('application.supportedFormatsMap') as unknown as Record<string, string>;
-    this.sourceDir = this.config.get('storageExplorer.sourceDir') as unknown as string;
+    this.defaultGeographicSrs = SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId'));
+    this.defaultProjectedSrs = SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId'));
+    this.supportedFormatsMap = this.config.get('application.supportedFormatsMap');
+    this.sourceDir = this.config.get('storageExplorer.sourceDir');
   }
 
   public supports(filePath: string): boolean {
