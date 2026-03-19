@@ -4,11 +4,11 @@ import { GEOTIFF_DATA_TYPES } from './constants';
 
 const config = getConfig();
 
-const blockSize = config.get('application.blockSize') as unknown as number;
-const compression = config.get('application.compression') as unknown as string;
-const resolutionDegree = config.get('application.resolutionDegree') as unknown as { min: number; max: number };
-const resolutionMeter = config.get('application.resolutionMeter') as unknown as { min: number; max: number };
-const supportedSrsIds = config.get('application.supportedSrsIds') as unknown as number[]; // TODO: include application.supportedSrsIds in service schema
+const blockSize = config.get('application.validation.blockSize') as unknown as number;
+const compression = config.get('application.validation.compression') as unknown as string;
+const resolutionDegree = config.get('application.validation.resolutionDegree') as unknown as { min: number; max: number };
+const resolutionMeter = config.get('application.validation.resolutionMeter') as unknown as { min: number; max: number };
+const supportedSrsIds = config.get('application.validation.supportedSrsIds') as unknown as number[];
 
 export const areaOrPointSchema = z.literal(['Area', 'Point']);
 export const blockSizeSchema = z.object({ x: z.literal(blockSize), y: z.literal(blockSize) });
