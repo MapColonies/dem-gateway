@@ -84,10 +84,10 @@ export class GDALHandler implements FileHandler {
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
 
       const bandBlockSize = await band.blockSizeAsync;
-      blockSizeSchema.parse(bandBlockSize);
+      blockSizeSchema.parse(bandBlockSize, { error: () => 'Unsupported block size' });
 
       const bandOverviewsCount = await band.overviews.countAsync();
-      overviewsCount.parse(bandOverviewsCount);
+      overviewsCount.parse(bandOverviewsCount, { error: () => 'Could not find overviews' });
 
       const bandDataType = await band.dataTypeAsync;
       const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });
