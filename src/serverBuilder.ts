@@ -11,6 +11,7 @@ import { Registry } from 'prom-client';
 import { inject, injectable } from 'tsyringe';
 import type { ConfigType } from '@common/config';
 import { SERVICES } from '@common/constants';
+import { addOperationIdToLog, logContextInjectionMiddleware } from '@common/logger';
 import { DEM_ROUTER_SYMBOL } from './dem/routes/demRouter';
 import { INFO_ROUTER_SYMBOL } from './info/routes/infoRouter';
 
@@ -52,8 +53,16 @@ export class ServerBuilder {
   }
 
   private registerPreRoutesMiddleware(): void {
+    this.serverInstance.use(logContextInjectionMiddleware);
     this.serverInstance.use(collectMetricsExpressMiddleware({ registry: this.metricsRegistry }));
-    this.serverInstance.use(httpLogger({ logger: this.logger, ignorePaths: ['/metrics'] }));
+    this.serverInstance.use(
+      httpLogger({
+        logger: this.logger,
+        ignorePaths: ['/metrics'],
+        customSuccessObject: addOperationIdToLog,
+        customErrorObject: (req, res, err, val) => addOperationIdToLog(req, res, val as Record<string, unknown>),
+      })
+    );
 
     if (this.config.get('server.response.compression.enabled')) {
       this.serverInstance.use(compression(this.config.get('server.response.compression.options') as unknown as compression.CompressionFilter));

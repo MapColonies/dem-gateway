@@ -1,10 +1,13 @@
 import { Router } from 'express';
-import { FactoryFunction } from 'tsyringe';
+import type { FactoryFunction } from 'tsyringe';
+import { logEnrichmentParamMiddlewareFactory } from '@src/common/logger';
 import { DEMController } from '../controllers/demController';
 
 const demRouterFactory: FactoryFunction<Router> = (dependencyContainer) => {
   const router = Router();
   const controller = dependencyContainer.resolve(DEMController);
+
+  router.param('id', logEnrichmentParamMiddlewareFactory('id'));
 
   router.post('/:id', controller.edit);
   router.delete('/:id', controller.edit);
