@@ -1,3 +1,6 @@
+# Temp folder
+tmp
+
 # Logs
 logs
 *.log
@@ -111,3 +114,5 @@ dist
 # Jest
 jest_html_reporters.html
 reports
+
+config/local*.json
