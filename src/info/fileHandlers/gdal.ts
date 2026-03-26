@@ -23,6 +23,7 @@ import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
 
 @injectable()
 export class GDALHandler implements FileHandler {
+  public readonly name = GDALHandler.name;
   private readonly defaultGeographicSrs: SpatialReference;
   private readonly defaultProjectedSrs: SpatialReference;
   private readonly supportedFormatsMap: Record<string, string>;
@@ -42,10 +43,10 @@ export class GDALHandler implements FileHandler {
   public supports(filePath: string): boolean {
     try {
       this.getDriver(filePath);
-      this.logger.debug({ msg: `Handler '${GDALHandler.name}' supports the requested file` });
+      this.logger.debug({ msg: `Handler '${this.name}' supports the requested file` });
       return true;
     } catch (error) {
-      this.logger.debug({ msg: `Handler '${GDALHandler.name}' cannot handle the requested file, caused by an error: ${JSON.stringify(error)}` });
+      this.logger.debug({ msg: `Handler '${this.name}' cannot handle the requested file, caused by an error: ${JSON.stringify(error)}` });
       return false;
     }
   }

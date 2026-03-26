@@ -7,6 +7,7 @@ import { components } from '@src/openapi';
 export type InfoOptions = components['schemas']['InfoRequestBody'];
 export type InfoResponse = components['schemas']['InfoResponse'];
 export interface FileHandler {
+  name: string;
   supports: (filePath: string) => boolean;
   getInfo: (filePath: string) => Promise<InfoResponse>;
 }
