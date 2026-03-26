@@ -410,13 +410,11 @@ components:
         demFilePath:
           $ref: '#/components/schemas/DemFilePath'
     InfoResponse:
-      type: object
       description: Info response body
-      unevaluatedProperties: false
-      oneOf:
-        - $ref: '#/components/schemas/InfoGeoTiff'
+      $ref: '#/components/schemas/InfoGeoTiff'
     InfoGeoTiff:
       description: Info properties of GeoTiff
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
         - type: object
