@@ -22,9 +22,9 @@ export class InfoManager {
   public async info(options: InfoOptions): Promise<InfoResponse> {
     const { demFilePath } = options;
 
-    this.logger.debug({ msg: `Handling info request`, resource: options });
+    this.logger.debug({ msg: 'Handling info request', resource: options });
     const response = await this.process(demFilePath);
-    this.logger.debug({ msg: `Info response`, response });
+    this.logger.debug({ msg: 'Info response', response });
 
     return response;
   }
@@ -35,6 +35,7 @@ export class InfoManager {
     if (!handler) {
       throw new UnprocessableEntityError(`No handler found for file: ${filePath}`);
     }
+    this.logger.debug({ msg: `Using handler '${handler.name}'` });
 
     const info = await handler.getInfo(filePath);
     return info;

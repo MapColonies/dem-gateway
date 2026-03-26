@@ -8,6 +8,7 @@ import { z } from 'zod';
 import type { ConfigType } from '@src/common/config';
 import { SERVICES } from '@src/common/constants';
 import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
+import { enrichLogContext } from '@src/common/logger';
 import {
   areaOrPointSchema,
   blockSizeSchema,
@@ -42,6 +43,7 @@ export class GDALHandler implements FileHandler {
 
   public supports(filePath: string): boolean {
     try {
+      this.logger.debug({ msg: 'Check if file is supported by handler' });
       this.getDriver(filePath);
       this.logger.debug({ msg: `Handler '${this.name}' supports the requested file` });
       return true;
@@ -52,7 +54,8 @@ export class GDALHandler implements FileHandler {
   }
 
   public async getInfo(filePath: string): Promise<InfoResponse> {
-    this.logger.info({ msg: `Getting info for ${filePath}` });
+    enrichLogContext({ handler: this.name });
+    this.logger.debug({ msg: 'Getting info' });
     let dataset: Dataset | undefined;
 
     const fullFilePath = join(this.sourceDir, filePath);
@@ -135,6 +138,8 @@ export class GDALHandler implements FileHandler {
     });
 
     if (supportedDriver === undefined) throw new Error(`Unsupported file format of file: ${filePath}`);
-    return this.gdal.drivers.get(supportedDriver);
+    const driver = this.gdal.drivers.get(supportedDriver);
+    this.logger.debug(`Found driver '${supportedDriver}' supporting file`);
+    return driver;
   }
 }
