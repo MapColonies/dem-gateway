@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { FactoryFunction } from 'tsyringe';
+import type { FactoryFunction } from 'tsyringe';
 import { InfoController } from '../controllers/infoController';
 
 const infoRouterFactory: FactoryFunction<Router> = (dependencyContainer) => {
