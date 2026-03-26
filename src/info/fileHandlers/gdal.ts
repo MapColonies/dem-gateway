@@ -2,7 +2,7 @@ import { access, constants } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { NotFoundError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
-import { SpatialReference, type Dataset, type Driver } from 'gdal-async';
+import { SpatialReference, type Dataset, type Driver, type RasterBand } from 'gdal-async';
 import { inject, injectable } from 'tsyringe';
 import { z } from 'zod';
 import type { ConfigType } from '@src/common/config';
@@ -69,59 +69,10 @@ export class GDALHandler implements FileHandler {
     try {
       const driver = this.getDriver(filePath);
       dataset = await driver.openAsync(fullFilePath, 'r');
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const metadata = await dataset.getMetadataAsync();
-      const areaOrPoint = z
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        .object({ AREA_OR_POINT: areaOrPointSchema })
-        .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const metadataImageStructure = await dataset.getMetadataAsync('IMAGE_STRUCTURE');
-      void z
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        .object({ LAYOUT: layoutSchema, COMPRESSION: compressionSchema })
-        .parse(metadataImageStructure, { error: () => 'Could not extract LAYOUT metadata' }).LAYOUT;
-
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
-
-      const bandBlockSize = await band.blockSizeAsync;
-      blockSizeSchema.parse(bandBlockSize, { error: () => 'Unsupported block size' });
-
-      const bandOverviewsCount = await band.overviews.countAsync();
-      overviewsCount.parse(bandOverviewsCount, { error: () => 'Could not find overviews' });
-
-      const bandDataType = await band.dataTypeAsync;
-      const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });
-
-      const bandNoDataValueAsync = await band.noDataValueAsync;
-      const noDataValue = noDataValueSchema.parse(bandNoDataValueAsync, { error: () => 'Unsupported band nodata value' });
-
-      const srs = await dataset.srsAsync;
-      if (srs === null) throw new Error('Unsupported SRS');
-      const srsInfo = getSrsInfo(srs);
-      const { srsId, srsName } = z.strictObject({ srsId: srsIdSchema, srsName: srsNameSchema }).parse(srsInfo, { error: () => 'Unsupported SRS' });
-
-      const geoTransform = await dataset.geoTransformAsync;
-
-      const { resolutionDegree, resolutionMeter } = getResolutions({
-        ...dataset.bands.getEnvelope(),
-        ...getPixelInfo({ geoTransform }),
-        targetGeographicSrs: this.defaultGeographicSrs,
-        targetProjectedSrs: this.defaultProjectedSrs,
-        sourceSrs: srs,
-      });
-
-      return {
-        areaOrPoint,
-        dataType,
-        noDataValue,
-        resolutionDegree,
-        resolutionMeter,
-        srsId,
-        srsName,
-      };
+      await this.validateMetadata({ dataset, band });
+      const metadata = await this.getMetadata({ dataset, band });
+      return metadata;
     } finally {
       dataset?.close();
     }
@@ -141,5 +92,61 @@ export class GDALHandler implements FileHandler {
     const driver = this.gdal.drivers.get(supportedDriver);
     this.logger.debug(`Found driver '${supportedDriver}' supporting file`);
     return driver;
+  }
+
+  private async getMetadata({ band, dataset }: { dataset: Dataset; band: RasterBand }): Promise<InfoResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const metadata = await dataset.getMetadataAsync();
+    const areaOrPoint = z
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      .object({ AREA_OR_POINT: areaOrPointSchema })
+      .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
+
+    const bandDataType = await band.dataTypeAsync;
+    const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });
+
+    const bandNoDataValueAsync = await band.noDataValueAsync;
+    const noDataValue = noDataValueSchema.parse(bandNoDataValueAsync, { error: () => 'Unsupported band nodata value' });
+
+    const srs = await dataset.srsAsync;
+    if (srs === null) throw new Error('Unsupported SRS');
+    const srsInfo = getSrsInfo(srs);
+    const { srsId, srsName } = z.strictObject({ srsId: srsIdSchema, srsName: srsNameSchema }).parse(srsInfo, { error: () => 'Unsupported SRS' });
+
+    const geoTransform = await dataset.geoTransformAsync;
+    const pixelInfo = getPixelInfo({ geoTransform });
+
+    const { resolutionDegree, resolutionMeter } = getResolutions({
+      ...dataset.bands.getEnvelope(),
+      ...pixelInfo,
+      targetGeographicSrs: this.defaultGeographicSrs,
+      targetProjectedSrs: this.defaultProjectedSrs,
+      sourceSrs: srs,
+    });
+
+    return {
+      areaOrPoint,
+      dataType,
+      noDataValue,
+      resolutionDegree,
+      resolutionMeter,
+      srsId,
+      srsName,
+    };
+  }
+
+  private async validateMetadata({ band, dataset }: { dataset: Dataset; band: RasterBand }): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const metadataImageStructure = await dataset.getMetadataAsync('IMAGE_STRUCTURE');
+    void z
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      .object({ LAYOUT: layoutSchema, COMPRESSION: compressionSchema })
+      .parse(metadataImageStructure, { error: () => 'Could not extract LAYOUT metadata' }).LAYOUT;
+
+    const bandBlockSize = await band.blockSizeAsync;
+    blockSizeSchema.parse(bandBlockSize, { error: () => 'Unsupported block size' });
+
+    const bandOverviewsCount = await band.overviews.countAsync();
+    overviewsCount.parse(bandOverviewsCount, { error: () => 'Could not find overviews' });
   }
 }
