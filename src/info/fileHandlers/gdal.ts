@@ -6,13 +6,14 @@ import { SpatialReference, type Dataset, type Driver, type RasterBand } from 'gd
 import { inject, injectable } from 'tsyringe';
 import { z } from 'zod';
 import type { ConfigType } from '@src/common/config';
-import { SERVICES } from '@src/common/constants';
+import { RASTER_DATA_TYPES, SERVICES } from '@src/common/constants';
 import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
 import { enrichLogContext } from '@src/common/logger';
 import {
   areaOrPointSchema,
   blockSizeSchema,
   compressionSchema,
+  hasKey,
   layoutSchema,
   noDataValueSchema,
   overviewsCount,
@@ -21,6 +22,7 @@ import {
   srsNameSchema,
 } from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
+import type { RasterFormats } from '@src/common/interfaces';
 
 @injectable()
 export class GDALHandler implements FileHandler {
@@ -67,20 +69,20 @@ export class GDALHandler implements FileHandler {
     }
 
     try {
-      const driver = this.getDriver(filePath);
+      const { driver, format } = this.getDriver(filePath);
       dataset = await driver.openAsync(fullFilePath, 'r');
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
       await this.validateMetadata({ dataset, band });
-      const metadata = await this.getMetadata({ dataset, band });
+      const metadata = await this.getMetadata({ band, dataset, format });
       return metadata;
     } finally {
       dataset?.close();
     }
   }
 
-  private getDriver(filePath: string): Driver {
+  private getDriver(filePath: string): { driver: Driver; format: RasterFormats } {
     const fileExtension = extname(filePath).slice(1);
-    const supportedDriver = Object.values(this.supportedFormatsMap).find((supportedDriver) => {
+    const supportedFormat = Object.entries(this.supportedFormatsMap).find(([, supportedDriver]) => {
       const driver = this.gdal.drivers.get(supportedDriver);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const driverMetadata = driver.getMetadata() as { DMD_EXTENSION?: string; DMD_EXTENSIONS?: string };
@@ -88,13 +90,17 @@ export class GDALHandler implements FileHandler {
       return [extension, ...extensions.split(' ')].filter((extension) => extension.length > 0).includes(fileExtension);
     });
 
-    if (supportedDriver === undefined) throw new Error(`Unsupported file format of file: ${filePath}`);
-    const driver = this.gdal.drivers.get(supportedDriver);
-    this.logger.debug(`Found driver '${supportedDriver}' supporting file`);
-    return driver;
+    if (supportedFormat === undefined) throw new Error(`Unsupported file format of file: ${filePath}`);
+    const [format, driverName] = supportedFormat;
+    if (!hasKey(format, RASTER_DATA_TYPES)) {
+      throw new Error(`Format '${format}' is not part of service's API`);
+    }
+    const driver = this.gdal.drivers.get(driverName);
+    this.logger.debug(`Found driver '${driverName}' supporting file`);
+    return { driver, format };
   }
 
-  private async getMetadata({ band, dataset }: { dataset: Dataset; band: RasterBand }): Promise<InfoResponse> {
+  private async getMetadata({ band, dataset, format }: { band: RasterBand; dataset: Dataset; format: RasterFormats }): Promise<InfoResponse> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const metadata = await dataset.getMetadataAsync();
     const areaOrPoint = z
@@ -103,7 +109,7 @@ export class GDALHandler implements FileHandler {
       .parse(metadata, { error: () => 'Could not extract AREA_OR_POINT metadata' }).AREA_OR_POINT;
 
     const bandDataType = await band.dataTypeAsync;
-    const dataType = pixelDataTypesSchema.parse(bandDataType, { error: () => 'Unsupported band data type' });
+    const dataType = pixelDataTypesSchema(format).parse(bandDataType, { error: () => 'Unsupported band data type' });
 
     const bandNoDataValueAsync = await band.noDataValueAsync;
     const noDataValue = noDataValueSchema.parse(bandNoDataValueAsync, { error: () => 'Unsupported band nodata value' });
@@ -135,7 +141,7 @@ export class GDALHandler implements FileHandler {
     };
   }
 
-  private async validateMetadata({ band, dataset }: { dataset: Dataset; band: RasterBand }): Promise<void> {
+  private async validateMetadata({ band, dataset }: { band: RasterBand; dataset: Dataset }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const metadataImageStructure = await dataset.getMetadataAsync('IMAGE_STRUCTURE');
     void z

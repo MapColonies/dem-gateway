@@ -1,5 +1,5 @@
 import { readPackageJsonSync } from '@map-colonies/read-pkg';
-import type { GeoTiffDataType, IsComplete, NoDuplicates, RasterDataType } from './interfaces';
+import type { GeoTiffDataType, IsComplete, NoDuplicates } from './interfaces';
 
 const defineConstTuple =
   <T>() =>
@@ -25,6 +25,6 @@ export const SERVICES = {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export const GEOTIFF_DATA_TYPES = defineConstTuple<GeoTiffDataType>()('Int8', 'Int16', 'Int32', 'Int64', 'Float16', 'Float32', 'Float64');
-export const RASTER_DATA_TYPES: Record<string, RasterDataType[]> = {
+export const RASTER_DATA_TYPES = {
   geotiff: GEOTIFF_DATA_TYPES,
 };

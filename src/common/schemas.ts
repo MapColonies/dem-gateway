@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z, type ZodLiteral } from 'zod';
 import { getConfig } from './config';
-import { GEOTIFF_DATA_TYPES } from './constants';
+import { RASTER_DATA_TYPES } from './constants';
 
 const config = getConfig();
 
@@ -10,13 +10,19 @@ const resolutionDegree = config.get('application.validation.resolutionDegree');
 const resolutionMeter = config.get('application.validation.resolutionMeter');
 const supportedSrsIds = config.get('application.validation.supportedSrsIds');
 
+export const hasKey = <T extends Record<PropertyKey, unknown>>(x: PropertyKey, object: T): x is keyof T => {
+  return Object.keys(object).includes(String(x));
+};
+
 export const areaOrPointSchema = z.literal(['Area', 'Point']);
 export const blockSizeSchema = z.object({ x: z.literal(blockSize), y: z.literal(blockSize) });
 export const compressionSchema = z.literal(compression);
 export const layoutSchema = z.literal('COG');
 export const noDataValueSchema = z.union([z.number(), z.nan()]).transform((value) => (Number.isNaN(value) ? 'NaN' : value));
 export const overviewsCount = z.number().positive();
-export const pixelDataTypesSchema = z.union([z.literal(GEOTIFF_DATA_TYPES)]); // add additional data types to union for each supported format
+export const pixelDataTypesSchema = (
+  format: keyof typeof RASTER_DATA_TYPES
+): ZodLiteral<(typeof RASTER_DATA_TYPES)[keyof typeof RASTER_DATA_TYPES][number]> => z.literal(RASTER_DATA_TYPES[format]);
 export const pixelSchema = z.number().positive();
 export const resolutionDegreeSchema = z.number().min(resolutionDegree.min).max(resolutionDegree.max);
 export const resolutionMeterSchema = z.number().min(resolutionMeter.min).max(resolutionMeter.max);
