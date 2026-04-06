@@ -16,7 +16,7 @@ import {
   hasKey,
   layoutSchema,
   noDataValueSchema,
-  overviewsCount,
+  overviewsCountSchema,
   pixelDataTypesSchema,
   srsIdSchema,
   srsNameSchema,
@@ -147,12 +147,12 @@ export class GDALHandler implements FileHandler {
     void z
       // eslint-disable-next-line @typescript-eslint/naming-convention
       .object({ LAYOUT: layoutSchema, COMPRESSION: compressionSchema })
-      .parse(metadataImageStructure, { error: () => 'Could not extract LAYOUT metadata' }).LAYOUT;
+      .parse(metadataImageStructure, { error: () => 'Unsupported image structure metadata (LAYOUT and COMPRESSION)' }).LAYOUT;
 
     const bandBlockSize = await band.blockSizeAsync;
-    blockSizeSchema.parse(bandBlockSize, { error: () => 'Unsupported block size' });
+    const blockSize = blockSizeSchema.parse(bandBlockSize, { error: () => 'Unsupported block size' });
 
     const bandOverviewsCount = await band.overviews.countAsync();
-    overviewsCount.parse(bandOverviewsCount, { error: () => 'Could not find overviews' });
+    overviewsCountSchema({ blockSize, size: band.size }).parse(bandOverviewsCount, { error: () => 'Could not find overviews' });
   }
 }

@@ -1,4 +1,4 @@
-import { z, type ZodLiteral } from 'zod';
+import { z, type ZodLiteral, type ZodNumber } from 'zod';
 import { getConfig } from './config';
 import { RASTER_DATA_TYPES } from './constants';
 
@@ -19,11 +19,22 @@ export const blockSizeSchema = z.object({ x: z.literal(blockSize), y: z.literal(
 export const compressionSchema = z.literal(compression);
 export const layoutSchema = z.literal('COG');
 export const noDataValueSchema = z.union([z.number(), z.nan()]).transform((value) => (Number.isNaN(value) ? 'NaN' : value));
-export const overviewsCount = z.number().positive();
+export const overviewsCountSchema = ({
+  blockSize,
+  size: { x, y },
+}: {
+  blockSize: z.infer<typeof blockSizeSchema>;
+  size: { x: number; y: number };
+}): ZodNumber =>
+  z
+    .number()
+    .min(1)
+    .max(Math.min(...[Math.ceil(x / blockSize.x), Math.ceil(y / blockSize.y)]))
+    .int()
+    .positive();
 export const pixelDataTypesSchema = (
   format: keyof typeof RASTER_DATA_TYPES
 ): ZodLiteral<(typeof RASTER_DATA_TYPES)[keyof typeof RASTER_DATA_TYPES][number]> => z.literal(RASTER_DATA_TYPES[format]);
-export const pixelSchema = z.number().positive();
 export const resolutionDegreeSchema = z.number().min(resolutionDegree.min).max(resolutionDegree.max);
 export const resolutionMeterSchema = z.number().min(resolutionMeter.min).max(resolutionMeter.max);
 export const srsIdSchema = z.literal(supportedSrsIds);
