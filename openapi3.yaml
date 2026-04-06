@@ -413,6 +413,7 @@ components:
       description: Info response body
       $ref: '#/components/schemas/InfoGeoTiff'
     InfoGeoTiff:
+      type: object
       description: Info properties of GeoTiff
       unevaluatedProperties: false
       allOf:
@@ -428,6 +429,7 @@ components:
               $ref: '#/components/schemas/NoDataValue'
     InputFiles:
       type: object
+      description: Input files
       unevaluatedProperties: false
       required:
         - demFilePath

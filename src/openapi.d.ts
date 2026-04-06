@@ -153,6 +153,7 @@ export type components = {
       dataType: components['schemas']['GeoTiffDataType'];
       noDataValue: components['schemas']['NoDataValue'];
     };
+    /** @description Input files */
     InputFiles: {
       demFilePath: components['schemas']['DemFilePath'];
       metadataShapefilePath: components['schemas']['MetadataShapefilePath'];
