@@ -116,20 +116,44 @@ export const getSrsInfo = (srs: SpatialReference): Pick<InfoResponse, 'srsId' | 
   };
 };
 
-export const transformPoint = (options: { sourceSrs: SpatialReference; targetSrs: SpatialReference; point: xyz }): xyz => {
-  const { sourceSrs, targetSrs, point } = options;
-  const coordinateTransformation = new CoordinateTransformation(sourceSrs, targetSrs);
+/**
+ * Swap coordinate order to have a { x: lon, y: lat } order, if needed
+ * @param options - Object with the following properties:
+ * @param options.point - Point to swap order if needed
+ * @param options.srs - SRS
+ * @returns Point with swapped coordinates
+ */
+export const swapCoordinateOrder = (options: { srs: SpatialReference; point: xyz }): xyz => {
+  const { point, srs } = options;
 
-  let sourcePoint: xyz;
+  let swappedPoint: xyz;
 
-  if (sourceSrs.isGeographic()) {
-    sourcePoint = sourceSrs.EPSGTreatsAsLatLong() ? { x: point.y, y: point.x } : point;
-  } else if (sourceSrs.isProjected()) {
-    sourcePoint = sourceSrs.EPSGTreatsAsNorthingEasting() ? { x: point.y, y: point.x } : point;
+  if (srs.isGeographic()) {
+    swappedPoint = srs.EPSGTreatsAsLatLong() ? { x: point.y, y: point.x } : point;
+  } else if (srs.isProjected()) {
+    swappedPoint = srs.EPSGTreatsAsNorthingEasting() ? { x: point.y, y: point.x } : point;
   } else {
-    throw new Error('Unsupported SRS type');
+    throw new Error(`Unsupported SRS type of '${srs.getAuthorityName()}:${srs.getAuthorityCode()}'`);
   }
 
+  return swappedPoint;
+};
+
+/**
+ * Reproject point
+ * @param options - Object with the following properties:
+ * @param options.point - Point to be transfomed (long/lat or east/north order)
+ * @param options.sourceSrs - Source SRS
+ * @param options.targetSrs - Target SRS
+ * @returns Reprojected point
+ */
+export const transformPoint = (options: { point: xyz; sourceSrs: SpatialReference; targetSrs: SpatialReference }): xyz => {
+  const { point, sourceSrs, targetSrs } = options;
+
+  const sourcePoint = swapCoordinateOrder({ point, srs: sourceSrs });
+  const coordinateTransformation = new CoordinateTransformation(sourceSrs, targetSrs);
   const transformedPoint = coordinateTransformation.transformPoint(sourcePoint);
-  return transformedPoint;
+  const targetPoint = swapCoordinateOrder({ point: transformedPoint, srs: targetSrs });
+
+  return targetPoint;
 };
