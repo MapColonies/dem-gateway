@@ -1,10 +1,13 @@
 import * as gdalAsync from 'gdal-async';
 import { CoordinateTransformation, SpatialReference, type Dataset, type Envelope, type xyz } from 'gdal-async';
+import { Geodesic } from 'geographiclib-geodesic';
 import { z } from 'zod';
 import type { InfoResponse } from '@src/info/models/infoManager';
 import { EPSG_DATA_RECORDS } from './epsg';
 import { UnsupportedSrsError } from './errors';
 import { resolutionDegreeSchema, resolutionMeterSchema } from './schemas';
+
+const EPSG_CODE_WGS84 = 4326;
 
 interface PixelInfo {
   pixelWidth: number;
@@ -22,53 +25,85 @@ export const getPixelInfo = (options: Pick<Dataset, 'geoTransform'>): PixelInfo 
   return { pixelHeight: Math.abs(validGeoTransform[5]), pixelWidth: Math.abs(validGeoTransform[1]) };
 };
 
+/**
+ * Get resolutions in a bound region
+ * @param options - Object with the following properties:
+ * @param options.sourceSrs - EPSG code or {@link SpatialReference} instance
+ * @param options.minX - Minimum X of region, in `sourceSrs` units
+ * @param options.minY - Minimum Y of region, in `sourceSrs` units
+ * @param options.maxX - Maximum X of region, in `sourceSrs` units
+ * @param options.maxY - Maximum Y of region, in `sourceSrs` units
+ * @param options.pixelWidth - Pixel width, in `sourceSrs` units
+ * @param options.pixelHeight - Pixel height, in `sourceSrs` units
+ * @returns Object of resolutions in meters and degrees on WGS84 ellipsoid
+ */
 export const getResolutions = (
   options: {
     sourceSrs: SpatialReference | number;
-    targetGeographicSrs: SpatialReference | number;
-    targetProjectedSrs: SpatialReference | number;
   } & Pick<Envelope, 'minX' | 'minY' | 'maxX' | 'maxY'> &
     PixelInfo
 ): Pick<InfoResponse, 'resolutionDegree' | 'resolutionMeter'> => {
-  const { targetGeographicSrs, targetProjectedSrs, maxX, maxY, minX, minY, pixelHeight, pixelWidth, sourceSrs } = options;
+  const { maxX, maxY, minX, minY, pixelHeight, pixelWidth, sourceSrs } = options;
   const resolvedSourceSrs = typeof sourceSrs === 'number' ? SpatialReference.fromEPSG(sourceSrs) : sourceSrs;
-  const resolvedTargetGeographicSrs = typeof targetGeographicSrs === 'number' ? SpatialReference.fromEPSG(targetGeographicSrs) : targetGeographicSrs;
-  const resolvedTargetProjectedSrs = typeof targetProjectedSrs === 'number' ? SpatialReference.fromEPSG(targetProjectedSrs) : targetProjectedSrs;
 
-  // TODO: how to handle pixelHeight, pixelWidth? mean / max / min ???
   const [dx, dy] = [maxX - minX, maxY - minY];
-  const [sourceMinX, sourceMinY, sourceMaxX, sourceMaxY] = [
-    /* eslint-disable @typescript-eslint/no-magic-numbers */
-    minX + (dx - pixelWidth) / 2,
-    minY + (dy - pixelHeight) / 2,
-    minX + (dx + pixelWidth) / 2,
-    minY + (dy + pixelHeight) / 2,
-    /* eslint-enable @typescript-eslint/no-magic-numbers */
-  ];
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  const [centerX, centerY] = [minX + dx / 2, minY + dy / 2];
+
+  /* eslint-disable @typescript-eslint/no-magic-numbers */
+  const { x: targetMinX } = transformPoint({
+    sourceSrs: resolvedSourceSrs,
+    targetSrs: SpatialReference.fromEPSG(EPSG_CODE_WGS84),
+    point: { x: centerX - pixelWidth / 2, y: centerY },
+  });
+  const { x: targetMaxX } = transformPoint({
+    sourceSrs: resolvedSourceSrs,
+    targetSrs: SpatialReference.fromEPSG(EPSG_CODE_WGS84),
+    point: { x: centerX + pixelWidth / 2, y: centerY },
+  });
+  const { y: targetMinY } = transformPoint({
+    sourceSrs: resolvedSourceSrs,
+    targetSrs: SpatialReference.fromEPSG(EPSG_CODE_WGS84),
+    point: { x: centerX, y: centerY - pixelHeight / 2 },
+  });
+  const { y: targetMaxY } = transformPoint({
+    sourceSrs: resolvedSourceSrs,
+    targetSrs: SpatialReference.fromEPSG(EPSG_CODE_WGS84),
+    point: { x: centerX, y: centerY + pixelHeight / 2 },
+  });
+  /* eslint-enable @typescript-eslint/no-magic-numbers */
 
   // approximation of the reprojected resolution
-  const getReprojectedResolution = (targetSrs: SpatialReference): number => {
-    const { x: targetMinX, y: targetMinY } = transformPoint({
-      sourceSrs: resolvedSourceSrs,
-      targetSrs,
-      point: { x: sourceMinX, y: sourceMinY },
-    });
-    const { x: targetMaxX, y: targetMaxY } = transformPoint({
-      sourceSrs: resolvedSourceSrs,
-      targetSrs,
-      point: { x: sourceMaxX, y: sourceMaxY },
-    });
-    const [dxTarget, dyTarget] = [targetMaxX - targetMinX, targetMaxY - targetMinY];
+  const getReprojectedDegreeResolution = (): number => {
+    const [reprojectedResolutionX, reprojectedResolutionY] = [targetMaxX - targetMinX, targetMaxY - targetMinY];
 
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const reprojectedResolution = (((dxTarget ** 2 + dyTarget ** 2) / (pixelWidth ** 2 + pixelHeight ** 2)) * pixelHeight ** 2) ** 0.5;
-    return reprojectedResolution;
+    return (reprojectedResolutionX + reprojectedResolutionY) / 2;
+  };
+
+  const getReprojectedMeterResolution = (): number => {
+    const geodesicDistanceX = Geodesic.WGS84.Inverse(centerY, targetMinX, centerY, targetMaxX).s12;
+    if (geodesicDistanceX === undefined)
+      throw new Error(
+        `Could not calculate geodesic distance between points (${[centerY, targetMinX].toString()})-(${[centerY, targetMaxX].toString()})]`
+      );
+
+    const geodesicDistanceY = Geodesic.WGS84.Inverse(targetMinY, centerX, targetMaxY, centerX).s12;
+    if (geodesicDistanceY === undefined)
+      throw new Error(
+        `Could not calculate geodesic distance between points (${[targetMinY, centerX].toString()})-(${[targetMaxY, centerY].toString()})]`
+      );
+
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    return (geodesicDistanceX + geodesicDistanceY) / 2;
   };
 
   const resolutions = (
     [
-      [resolvedSourceSrs.isGeographic(), { resolutionMeter: getReprojectedResolution(resolvedTargetProjectedSrs), resolutionDegree: pixelHeight }],
-      [resolvedSourceSrs.isProjected(), { resolutionMeter: pixelHeight, resolutionDegree: getReprojectedResolution(resolvedTargetGeographicSrs) }],
+      /* eslint-disable @typescript-eslint/no-magic-numbers */
+      [resolvedSourceSrs.isGeographic(), { resolutionMeter: getReprojectedMeterResolution(), resolutionDegree: (pixelWidth + pixelHeight) / 2 }],
+      [resolvedSourceSrs.isProjected(), { resolutionMeter: (pixelWidth + pixelHeight) / 2, resolutionDegree: getReprojectedDegreeResolution() }],
+      /* eslint-enable @typescript-eslint/no-magic-numbers */
     ] satisfies [boolean, { resolutionMeter: number; resolutionDegree: number }][]
   ).find((value) => value[0])?.[1];
 

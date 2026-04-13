@@ -2,12 +2,14 @@ import { access, constants } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { NotFoundError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
-import { SpatialReference, type Dataset, type Driver, type RasterBand } from 'gdal-async';
+import { type Dataset, type Driver, type RasterBand } from 'gdal-async';
 import { inject, injectable } from 'tsyringe';
 import { z } from 'zod';
 import type { ConfigType } from '@src/common/config';
 import { RASTER_DATA_TYPES, SERVICES } from '@src/common/constants';
+import { UnsupportedSrsError } from '@src/common/errors';
 import { GDAL_ASYNC, getPixelInfo, getResolutions, getSrsInfo, type GdalAsync } from '@src/common/gdal';
+import type { RasterFormats } from '@src/common/interfaces';
 import { enrichLogContext } from '@src/common/logger';
 import {
   areaOrPointSchema,
@@ -22,14 +24,10 @@ import {
   srsNameSchema,
 } from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
-import { UnsupportedSrsError } from '@src/common/errors';
-import type { RasterFormats } from '@src/common/interfaces';
 
 @injectable()
 export class GDALHandler implements FileHandler {
   public readonly name = GDALHandler.name;
-  private readonly defaultGeographicSrs: SpatialReference;
-  private readonly defaultProjectedSrs: SpatialReference;
   private readonly supportedFormatsMap: Record<string, string>;
   private readonly sourceDir: string;
 
@@ -38,8 +36,6 @@ export class GDALHandler implements FileHandler {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(GDAL_ASYNC) private readonly gdal: GdalAsync
   ) {
-    this.defaultGeographicSrs = SpatialReference.fromEPSG(this.config.get('application.defaultGeographicSrsId'));
-    this.defaultProjectedSrs = SpatialReference.fromEPSG(this.config.get('application.defaultProjectedSrsId'));
     this.supportedFormatsMap = this.config.get('application.supportedFormatsMap');
     this.sourceDir = this.config.get('storageExplorer.sourceDir');
   }
@@ -126,8 +122,6 @@ export class GDALHandler implements FileHandler {
     const { resolutionDegree, resolutionMeter } = getResolutions({
       ...dataset.bands.getEnvelope(),
       ...pixelInfo,
-      targetGeographicSrs: this.defaultGeographicSrs,
-      targetProjectedSrs: this.defaultProjectedSrs,
       sourceSrs: srs,
     });
 

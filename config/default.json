@@ -56,8 +56,6 @@
         32760
       ]
     },
-    "defaultGeographicSrsId": 4326,
-    "defaultProjectedSrsId": 3395,
     "supportedFormatsMap": {
       "geotiff": "gtiff"
     }
