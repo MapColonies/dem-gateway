@@ -1,64 +1,48 @@
-# Map Colonies typescript service template
+# dem-gateway
 
-----------------------------------
-
-This is a basic repo template for building new MapColonies web services in Typescript.
-
-> [!IMPORTANT]
-> To regenerate the types on openapi change run the command `npm run generate:openapi-types`.
-
-> [!WARNING]
-> After creating a new repo based on this template, you should delete the CODEOWNERS file.
-
+Gateway for DEM resources manipulation
 
 ## Development
+
 When in development you should use the command `npm run start:dev`. The main benefits are that it enables offline mode for the config package, and source map support for NodeJS errors.
 
-### Template Features:
+### Adding a New Handler
 
-- eslint configuration by [@map-colonies/eslint-config](https://github.com/MapColonies/eslint-config)
+<!-- TODO add sections for /info & /dem-->
+Before all, check if existing handlers can fulfill your need. For example, [`gdal handler`](src/info//fileHandlers/gdal.ts) can handle most of raster file formats.
 
-- prettier configuration by [@map-colonies/prettier-config](https://github.com/MapColonies/prettier-config)
+Add a new file handler under `src/info/fileHandlers`. The file should contain a class implementing the `FileHandler` interface.
+Verify that OpenAPI spec supports the file format associated with the new handler. OpenAPI validates input file formats through a RegEx pattern.
 
-- jest
+Add a new or record into the [default.json](config/default.json) under `application.supportedFormatsMap` in the form of:
 
-- .nvmrc
+```json
+{
+  ...
+  "application": {
+    ...
+    "supportedFormatsMap": {
+      ...
+      "formatName": "drivername"
+    },
+    ...
+  }
+}
 
-- Multi stage production-ready Dockerfile
+```
+This configuration is used to map common format names into a given file handler internal name. For example, the gdal handler maps formats into gdal's internal driver name.
 
-- commitlint
+Finally, since DI is utilized a new record for the new handler should be added in [containerConfig.ts](src/containerConfig.ts):
 
-- git hooks
-
-- logging by [@map-colonies/js-logger](https://github.com/MapColonies/js-logger)
-
-- OpenAPI request validation
-
-- config load with [node-config](https://www.npmjs.com/package/node-config)
-
-- Tracing and metrics by [@map-colonies/telemetry](https://github.com/MapColonies/telemetry)
-
-- github templates
-
-- bug report
-
-- feature request
-
-- pull request
-
-- github actions
-
-- on pull_request
-
-- LGTM
-
-- test
-
-- lint
-
-- snyk
+```javascript
+const dependencies: InjectionObject<unknown>[] = [
+    ...
+    { token: 'FileHandler', provider: { useClass: NewHandler } }
+];
+```
 
 ## API
+
 Checkout the OpenAPI spec [here](/openapi3.yaml)
 
 ## Installation
@@ -74,33 +58,25 @@ npm install
 Clone the project
 
 ```bash
-
 git clone https://link-to-project
-
 ```
 
 Go to the project directory
 
 ```bash
-
 cd my-project
-
 ```
 
 Install dependencies
 
 ```bash
-
 npm install
-
 ```
 
 Start the server
 
 ```bash
-
 npm run start
-
 ```
 
 ## Running Tests
@@ -108,17 +84,17 @@ npm run start
 To run tests, run the following command
 
 ```bash
-
 npm run test
-
 ```
 
 To only run unit tests:
+
 ```bash
 npm run test:unit
 ```
 
 To only run integration tests:
+
 ```bash
 npm run test:integration
 ```
