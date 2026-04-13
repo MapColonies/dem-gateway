@@ -22,6 +22,7 @@ import {
   srsNameSchema,
 } from '@src/common/schemas';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
+import { UnsupportedSrsError } from '@src/common/errors';
 import type { RasterFormats } from '@src/common/interfaces';
 
 @injectable()
@@ -115,7 +116,7 @@ export class GDALHandler implements FileHandler {
     const noDataValue = noDataValueSchema.parse(bandNoDataValueAsync, { error: () => 'Unsupported band nodata value' });
 
     const srs = await dataset.srsAsync;
-    if (srs === null) throw new Error('Unsupported SRS');
+    if (srs === null) throw new UnsupportedSrsError('Unsupported SRS');
     const srsInfo = getSrsInfo(srs);
     const { srsId, srsName } = z.strictObject({ srsId: srsIdSchema, srsName: srsNameSchema }).parse(srsInfo, { error: () => 'Unsupported SRS' });
 

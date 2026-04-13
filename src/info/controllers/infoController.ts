@@ -1,10 +1,11 @@
+import { UnprocessableEntityError } from '@map-colonies/error-types';
 import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
 import { ZodError } from 'zod';
-import { UnprocessableEntityError } from '@map-colonies/error-types';
 import type { Logger } from '@map-colonies/js-logger';
 import type { TypedRequestHandlers } from '@openapi';
 import { SERVICES } from '@common/constants';
+import { UnsupportedSrsError } from '@src/common/errors';
 import { enrichLogContext } from '@src/common/logger';
 import { InfoManager } from '../models/infoManager';
 
@@ -24,6 +25,8 @@ export class InfoController {
       this.logger.error({ err: error });
       if (error instanceof ZodError) {
         return next(new UnprocessableEntityError(error.issues[0]?.message ?? 'validation error'));
+      } else if (error instanceof UnsupportedSrsError) {
+        return next(new UnprocessableEntityError(error.message));
       }
       next(error);
     }

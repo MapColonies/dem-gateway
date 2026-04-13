@@ -1,8 +1,9 @@
-import { CoordinateTransformation, SpatialReference, type Dataset, type Envelope, type xyz } from 'gdal-async';
 import * as gdalAsync from 'gdal-async';
+import { CoordinateTransformation, SpatialReference, type Dataset, type Envelope, type xyz } from 'gdal-async';
 import { z } from 'zod';
 import type { InfoResponse } from '@src/info/models/infoManager';
 import { EPSG_DATA_RECORDS } from './epsg';
+import { UnsupportedSrsError } from './errors';
 import { resolutionDegreeSchema, resolutionMeterSchema } from './schemas';
 
 interface PixelInfo {
@@ -72,7 +73,7 @@ export const getResolutions = (
   ).find((value) => value[0])?.[1];
 
   if (resolutions == undefined) {
-    throw new Error('Unsupported SRS type');
+    throw new UnsupportedSrsError('Unsupported SRS type');
   }
 
   const response = z.strictObject({ resolutionMeter: resolutionMeterSchema, resolutionDegree: resolutionDegreeSchema }).parse(resolutions);
@@ -90,7 +91,7 @@ export const getSrsName = (srsId: number): string => {
   ).find((value) => value[0])?.[1];
 
   if (srsName == undefined) {
-    throw new Error('Unsupported SRS type');
+    throw new UnsupportedSrsError('Unsupported SRS type');
   }
 
   return srsName;
@@ -99,7 +100,7 @@ export const getSrsName = (srsId: number): string => {
 export const getSrsGeographicBounds = (options: { srsId: number }): [number, number, number, number] => {
   const { srsId } = options;
   const epsgRecord = EPSG_DATA_RECORDS[srsId];
-  if (!epsgRecord) throw new Error('Unsupported SRS');
+  if (!epsgRecord) throw new UnsupportedSrsError('Unsupported SRS');
 
   const [sourceMaxY, sourceMinX, sourceMinY, sourceMaxX] = epsgRecord.bbox;
   return [sourceMinX, sourceMinY, sourceMaxX, sourceMaxY];
@@ -108,6 +109,7 @@ export const getSrsGeographicBounds = (options: { srsId: number }): [number, num
 export const getSrsInfo = (srs: SpatialReference): Pick<InfoResponse, 'srsId' | 'srsName'> => {
   const srsAuthorityCode = srs.getAuthorityCode();
   const srsId = parseInt(srsAuthorityCode);
+  if (Number.isNaN(srsId)) throw new UnsupportedSrsError('Unsupported SRS');
   const srsName = getSrsName(srsId);
 
   return {
@@ -133,7 +135,7 @@ export const swapCoordinateOrder = (options: { srs: SpatialReference; point: xyz
   } else if (srs.isProjected()) {
     swappedPoint = srs.EPSGTreatsAsNorthingEasting() ? { x: point.y, y: point.x } : point;
   } else {
-    throw new Error(`Unsupported SRS type of '${srs.getAuthorityName()}:${srs.getAuthorityCode()}'`);
+    throw new UnsupportedSrsError(`Unsupported SRS type of '${srs.getAuthorityName()}:${srs.getAuthorityCode()}'`);
   }
 
   return swappedPoint;
