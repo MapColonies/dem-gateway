@@ -49,15 +49,7 @@ const getHintedErrorOnProperty = (
   );
 
 const isSupertestResponse = (received: unknown, context: TestContext): received is SupertestResponse => {
-  const {
-    isNot,
-    matcherHint,
-    matcherName,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    RECEIVED_COLOR,
-    printReceived,
-    printWithType,
-  } = context;
+  const { isNot, matcherHint, matcherName, RECEIVED_COLOR, printReceived, printWithType } = context;
   if (typeof received !== 'object' || received === null) {
     throw new TypeError(
       matcherErrorMessage(
