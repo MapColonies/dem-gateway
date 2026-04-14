@@ -21,7 +21,7 @@ fullnameOverride: ""
 
 configManagement:
   offlineMode: false
-  name: 'service-name'
+  name: 'dem-gateway'
   version: 'latest'
   serverUrl: 'http://localhost:8080/api'
 
