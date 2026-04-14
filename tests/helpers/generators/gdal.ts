@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { faker } from '@faker-js/faker';
 import { drivers, SpatialReference, type StringOptions } from 'gdal-async';
 import type { z } from 'zod';
-import { SERVICE_NAME } from '@src/common/constants';
 import type { blockSizeSchema, compressionSchema, layoutSchema, overviewsCountSchema } from '@src/common/schemas';
+import { tmpDirPath } from '../constants';
 import type { InfoGeoTiff } from '../interfaces';
-
-const dirPath = mkdtempSync(join(tmpdir(), `${SERVICE_NAME}-`));
 
 interface GDALCreationOptions {
   driverName: string;
@@ -58,7 +54,7 @@ export const createGDALGeotiffCOGRaster = async (options: CreateGDALRasterOption
   } = options;
 
   const driverGeoTiff = drivers.get('MEM');
-  const filePath = join(dirPath, faker.system.commonFileName('tif'));
+  const filePath = join(tmpDirPath, faker.system.commonFileName('tif'));
 
   const dataset = await driverGeoTiff.createAsync('', xSize, ySize, BAND_COUNT, dataType, creationOptions);
 

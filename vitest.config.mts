@@ -41,6 +41,7 @@ export default defineConfig({
       {
         test: {
           name: 'integration',
+          globalSetup: ['./tests/configurations/tmpFolder.setup.ts'],
           setupFiles: [
             './tests/configurations/initConfig.setup.ts',
             './tests/configurations/initCustomMatchers.setup.ts',
