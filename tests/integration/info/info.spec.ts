@@ -3,17 +3,16 @@ import { faker } from '@faker-js/faker';
 import { jsLogger } from '@map-colonies/js-logger';
 import { createRequestSender, RequestSender } from '@map-colonies/openapi-helpers/requestSender';
 import { trace } from '@opentelemetry/api';
-import { Dataset, DatasetBands, Driver } from 'gdal-async';
 import * as gdalAsync from 'gdal-async';
+import { Dataset, DatasetBands, Driver } from 'gdal-async';
 import httpStatusCodes from 'http-status-codes';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { operations, paths } from '@openapi';
 import { getApp } from '@src/app';
 import { getConfig } from '@src/common/config';
 import { RASTER_DATA_TYPES, SERVICES } from '@src/common/constants';
-import { createInfoResource } from '@tests/helpers/faker/info.faker';
-import { createInfoMetadata } from '@tests/helpers/faker/info.faker';
 import { hasKey } from '@src/common/schemas';
+import { createInfoMetadata, createInfoResource } from '@tests/helpers/faker/info.faker';
 
 vi.mock('node:fs/promises', { spy: true });
 
