@@ -69,7 +69,7 @@ export class GDALHandler implements FileHandler {
       const { driver, format } = this.getDriver(filePath);
       dataset = await driver.openAsync(fullFilePath, 'r');
       const band = await dataset.bands.getAsync(1); // DEMs are mostly single banded
-      await this.validateMetadata({ dataset, band });
+      await this.validateMetadata({ band, dataset });
       const metadata = await this.getMetadata({ band, dataset, format });
       return metadata;
     } finally {
