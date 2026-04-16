@@ -10,10 +10,6 @@ const resolutionDegree = config.get('application.validation.resolutionDegree');
 const resolutionMeter = config.get('application.validation.resolutionMeter');
 const supportedSrsIds = config.get('application.validation.supportedSrsIds');
 
-export const hasKey = <T extends Record<PropertyKey, unknown>>(x: PropertyKey, object: T): x is keyof T => {
-  return Object.keys(object).includes(String(x));
-};
-
 export const areaOrPointSchema = z.literal(['Area', 'Point']);
 export const blockSizeSchema = z.object({ x: z.literal(blockSize), y: z.literal(blockSize) });
 export const compressionSchema = z.literal(compression);

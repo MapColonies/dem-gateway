@@ -15,7 +15,6 @@ import {
   areaOrPointSchema,
   blockSizeSchema,
   compressionSchema,
-  hasKey,
   layoutSchema,
   noDataValueSchema,
   overviewsCountSchema,
@@ -23,6 +22,7 @@ import {
   srsIdSchema,
   srsNameSchema,
 } from '@src/common/schemas';
+import { hasKey } from '@src/common/utils';
 import type { FileHandler, InfoResponse } from '@src/info/models/infoManager';
 
 @injectable()

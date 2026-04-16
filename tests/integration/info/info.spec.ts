@@ -11,7 +11,7 @@ import { operations, paths } from '@openapi';
 import { getApp } from '@src/app';
 import { getConfig } from '@src/common/config';
 import { RASTER_DATA_TYPES, SERVICES } from '@src/common/constants';
-import { hasKey } from '@src/common/schemas';
+import { hasKey } from '@src/common/utils';
 import { createInfoMetadata, createInfoResource } from '@tests/helpers/faker/info.faker';
 
 vi.mock('node:fs/promises', { spy: true });
