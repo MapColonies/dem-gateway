@@ -143,8 +143,6 @@ describe('POST /info', () => {
   describe('Sad Path', () => {
     type InfoResponseBodyNotFound = paths['/info']['post']['responses'][404]['content']['application/json'];
 
-    // TODO: ADD NEW METADATA VALIDATION TESTS
-
     it('should return 404 status code and respond with unsuccessful message when file does not exist', async () => {
       const demFilePath = '/non/existent/file.tif';
       const response = await requestSender.info({ requestBody: { demFilePath } });
