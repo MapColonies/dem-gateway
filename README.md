@@ -8,7 +8,6 @@ When in development you should use the command `npm run start:dev`. The main ben
 
 ### Adding a New Handler
 
-<!-- TODO add sections for /info & /dem-->
 Before all, check if existing handlers can fulfill your need. For example, [`gdal handler`](src/info//fileHandlers/gdal.ts) can handle most of raster file formats.
 
 Add a new file handler under `src/info/fileHandlers`. The file should contain a class implementing the `FileHandler` interface.
