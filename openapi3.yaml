@@ -31,7 +31,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DemSuccessfulResponse'
+                $ref: '#/components/schemas/DemResponse'
         400:
           description: Bad Request
           content:
@@ -81,7 +81,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DemSuccessfulResponse'
+                $ref: '#/components/schemas/DemResponse'
         400:
           description: Bad Request
           content:
@@ -130,7 +130,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DemSuccessfulResponse'
+                $ref: '#/components/schemas/DemResponse'
         400:
           description: Bad Request
           content:
@@ -280,25 +280,17 @@ components:
           $ref: '#/components/schemas/DemMetadata'
         inputFiles:
           $ref: '#/components/schemas/InputFiles'
-    DemType:
-      type: string
-      description: DEM type
-      minLength: 0
     GeoTiffDataType:
       type: string
       description: GeoTiff supported data types
       enum:
-        - Byte
-        - UInt16
+        - Int8
         - Int16
-        - UInt32
         - Int32
+        - Int64
+        - Float16
         - Float32
         - Float64
-        - CInt16
-        - CInt32
-        - CFloat32
-        - CFloat64
     DemFilePath:
       type: string
       pattern: ^(\/?[\w-]+)(\/[\w-]+)*\/[\wא-ת\.-]+\.(tif)$
@@ -334,7 +326,7 @@ components:
           $ref: '#/components/schemas/ProducerName'
         productSubType:
           $ref: '#/components/schemas/ProductSubType'
-    DemSuccessfulResponse:
+    DemResponse:
       type: object
       unevaluatedProperties: false
       required:
@@ -382,6 +374,8 @@ components:
         message:
           type: string
           minLength: 1
+        stacktrace:
+          type: string
     GeoidModel:
       type: string
       description: Earth's geoid model
@@ -391,15 +385,15 @@ components:
       description: Common properties of regular grids
       required:
         - areaOrPoint
-        - resolutionDegrees
+        - resolutionDegree
         - resolutionMeter
         - srsId
         - srsName
       properties:
         areaOrPoint:
           $ref: '#/components/schemas/AreaOrPoint'
-        resolutionDegrees:
-          $ref: '#/components/schemas/ResolutionDegrees'
+        resolutionDegree:
+          $ref: '#/components/schemas/ResolutionDegree'
         resolutionMeter:
           $ref: '#/components/schemas/ResolutionMeter'
         srsId:
@@ -416,38 +410,26 @@ components:
         demFilePath:
           $ref: '#/components/schemas/DemFilePath'
     InfoResponse:
-      type: object
       description: Info response body
-      unevaluatedProperties: false
-      required:
-        - demType
-      discriminator:
-        propertyName: demType
-      oneOf:
-        - allOf:
-            - $ref: '#/components/schemas/InfoGeoTiff'
+      $ref: '#/components/schemas/InfoGeoTiff'
     InfoGeoTiff:
+      type: object
       description: Info properties of GeoTiff
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/InfoCommonRegularGridProperties'
         - type: object
           required:
-            - demType
             - dataType
             - noDataValue
           properties:
-            demType:
-              allOf:
-                - $ref: '#/components/schemas/DemType'
-                - type: string
-                  enum:
-                    - geotiff
             dataType:
               $ref: '#/components/schemas/GeoTiffDataType'
             noDataValue:
               $ref: '#/components/schemas/NoDataValue'
     InputFiles:
       type: object
+      description: Input files
       unevaluatedProperties: false
       required:
         - demFilePath
@@ -474,8 +456,11 @@ components:
       description: Metadata shape file path
       example: /path/to/ShapeMetadata.shp
     NoDataValue:
-      type: number
-      description: No data value of DEM
+      oneOf:
+        - type: number
+          description: No data value of DEM
+        - type: string
+          const: NaN
     Status:
       type: string
       default: UNPUBLISHED
@@ -521,7 +506,7 @@ components:
         minLength: 1
       minItems: 1
       description: List of layer's regions
-    ResolutionDegrees:
+    ResolutionDegree:
       type: number
       description: DEM resolution in degrees
       exclusiveMinimum: 0

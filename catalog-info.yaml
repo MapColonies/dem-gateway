@@ -1,17 +1,17 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: ts-server-boilerplate
-  description: A boilerplate github repo for a REST API service in NodeJS for MapColonies
+  name: dem-gateway
+  description: Gateway for DEM resources manipulation
   annotations:
-    github.com/project-slug: MapColonies/ts-server-boilerplate
+    github.com/project-slug: MapColonies/dem-gateway
   tags:
     - nodejs
     - typescript
     - expressjs
-    - boilerplate
+    - dem
 spec:
   type: service
   lifecycle: production
-  owner: DevInfra
-  system: boilerplate
+  owner: DEM
+  system: dem-ingestion

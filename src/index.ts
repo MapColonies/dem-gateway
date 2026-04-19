@@ -2,9 +2,9 @@
 import 'reflect-metadata';
 import { createServer } from 'http';
 import { createTerminus } from '@godaddy/terminus';
-import { Logger } from '@map-colonies/js-logger';
+import type { Logger } from '@map-colonies/js-logger';
 import { SERVICES } from '@common/constants';
-import { ConfigType } from '@common/config';
+import type { ConfigType } from '@common/config';
 import { getApp } from './app';
 
 void getApp()

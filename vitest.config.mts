@@ -25,7 +25,12 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          setupFiles: ['./tests/configurations/initJestOpenapi.setup.ts', './tests/configurations/vite.setup.ts'],
+          setupFiles: [
+            './tests/configurations/initConfig.setup.ts',
+            './tests/configurations/initJestExtended.setup.ts',
+            './tests/configurations/initZodSchemaFaker.setup.ts',
+            './tests/configurations/vite.setup.ts',
+          ],
           include: ['tests/unit/**/*.spec.ts'],
           environment: 'node',
         },
@@ -36,7 +41,15 @@ export default defineConfig({
       {
         test: {
           name: 'integration',
-          setupFiles: ['./tests/configurations/initJestOpenapi.setup.ts', './tests/configurations/vite.setup.ts'],
+          globalSetup: ['./tests/configurations/tmpFolder.setup.ts'],
+          setupFiles: [
+            './tests/configurations/initConfig.setup.ts',
+            './tests/configurations/initCustomMatchers.setup.ts',
+            './tests/configurations/initJestExtended.setup.ts',
+            './tests/configurations/initZodSchemaFaker.setup.ts',
+            './tests/configurations/initJestOpenapi.setup.ts',
+            './tests/configurations/vite.setup.ts',
+          ],
           include: ['tests/integration/**/*.spec.ts'],
           environment: 'node',
         },

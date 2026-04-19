@@ -1,0 +1,38 @@
+import { UnprocessableEntityError } from '@map-colonies/error-types';
+import type { Logger } from '@map-colonies/js-logger';
+import { inject, injectable, injectAll } from 'tsyringe';
+import { SERVICES } from '@src/common/constants';
+import { components } from '@src/openapi';
+
+export type InfoOptions = components['schemas']['InfoRequestBody'];
+export type InfoResponse = components['schemas']['InfoResponse'];
+export interface FileHandler {
+  name: string;
+  supports: (filePath: string) => boolean;
+  getInfo: (filePath: string) => Promise<InfoResponse>;
+}
+
+@injectable()
+export class InfoManager {
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @injectAll('FileHandler') private readonly fileHandlers: FileHandler[]
+  ) {}
+
+  public async info(options: InfoOptions): Promise<InfoResponse> {
+    const { demFilePath } = options;
+
+    this.logger.debug({ msg: 'Handling info request', resource: options });
+    const handler = this.fileHandlers.find((handler) => handler.supports(demFilePath));
+
+    if (!handler) {
+      throw new UnprocessableEntityError(`No handler found for file: ${demFilePath}`);
+    }
+    this.logger.debug({ msg: `Using handler '${handler.name}'` });
+
+    const response = await handler.getInfo(demFilePath);
+    this.logger.debug({ msg: 'Info response', response });
+
+    return response;
+  }
+}
