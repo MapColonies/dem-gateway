@@ -5,8 +5,9 @@ global:
 
 mclabels:
   component: backend
-  partOf: boilerplates
-  owner: common
+  partOf: core
+  owner: dem
+  gisDomain: dem
   prometheus:
     enabled: true
 
@@ -64,7 +65,7 @@ caPath: '/usr/local/share/ca-certificates'
 caKey: 'ca.crt'
 
 image:
-  repository: ts-server-boilerplate
+  repository: dem-gateway
   # If commented, appVersion will be taken. See: _helpers.tpl
   # tag: 'latest'
   pullPolicy: IfNotPresent
