@@ -23,21 +23,16 @@ export class InfoManager {
     const { demFilePath } = options;
 
     this.logger.debug({ msg: 'Handling info request', resource: options });
-    const response = await this.process(demFilePath);
-    this.logger.debug({ msg: 'Info response', response });
-
-    return response;
-  }
-
-  private async process(filePath: string): Promise<InfoResponse> {
-    const handler = this.fileHandlers.find((handler) => handler.supports(filePath));
+    const handler = this.fileHandlers.find((handler) => handler.supports(demFilePath));
 
     if (!handler) {
-      throw new UnprocessableEntityError(`No handler found for file: ${filePath}`);
+      throw new UnprocessableEntityError(`No handler found for file: ${demFilePath}`);
     }
     this.logger.debug({ msg: `Using handler '${handler.name}'` });
 
-    const info = await handler.getInfo(filePath);
-    return info;
+    const response = await handler.getInfo(demFilePath);
+    this.logger.debug({ msg: 'Info response', response });
+
+    return response;
   }
 }
